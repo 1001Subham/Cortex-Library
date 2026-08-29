@@ -328,7 +328,11 @@ PROJECT_CONTEXT.md
 
 Last updated: 2026-08-29
 
-PHASE: Foundation (Complete)
+PHASE: Catalog schema migrated (CORTEX-10); no seed data; catalog APIs not implemented
+
+JIRA:
+- CORTEX-6 — US-01: Browse Digital Library (in progress)
+- CORTEX-10 — Design Digital Book Catalog Interface (schema implemented in PostgreSQL)
 
 COMPLETED:
 - Root monorepo structure (frontend, backend, ml-service, database, docs)
@@ -357,7 +361,7 @@ ARCHITECTURE DECISIONS:
 - ML processing isolated in Python FastAPI service (not in Node.js)
 - Browser calls backend via VITE_API_URL (localhost-mapped port)
 - Inside Docker Compose, services communicate via service names
-- No database tables created yet; migrations folder is placeholder only
+- Catalog schema lives in `database/migrations/` and is applied to local PostgreSQL
 - Database connectivity uses `pg` Pool in `backend/src/config/database.js`
 - Health check runs `SELECT 1` via pool; returns 503 when connection fails
 - Development logs include safe DB connection diagnostics (host/port/db/user, error code/message) but never passwords
@@ -371,10 +375,34 @@ DATABASE CONNECTION (confirmed 2026-08-29):
   - idle timeout: 30 seconds
 - GET /api/health returns HTTP 200 with database: connected when pool can execute SELECT 1
 
+DATABASE DESIGN (CORTEX-10, migrated 2026-08-29):
+- Full specification: docs/DATABASE_DESIGN.md
+- Migration files (applied, forward-only CREATE):
+  - database/migrations/001_enable_extensions.sql
+  - database/migrations/002_create_categories.sql
+  - database/migrations/003_create_authors.sql
+  - database/migrations/004_create_books.sql
+  - database/migrations/005_create_book_authors.sql
+  - database/migrations/006_create_book_categories.sql
+- Entities created: categories, authors, books, book_authors, book_categories
+- books M:N categories via book_categories (no books.primary_category_id)
+- categories.parent_id for hierarchical taxonomy; no separate genres table
+- language_code VARCHAR(10)
+- Book content: application-managed files referenced by content_storage_key; first reader uses HTML
+- No pg_trgm; gen_random_uuid() from PostgreSQL 16 core
+- No seed data yet (empty catalog tables)
+
+BOOK CONTENT STRATEGY:
+- Users read inside Cortex Library (React reader); backend serves stored files
+- Do not redirect to external sites, require PDF download, or store external reading URLs
+- Example key: storage/books/{book_id}/content.html
+- content_format CHECK: html | epub | markdown (EPUB parsing later)
+
 NOT YET IMPLEMENTED:
 - Authentication (JWT, Google OAuth)
-- Database schema and migrations
-- Book catalog, categories, issuing
+- Catalog seed data
+- Book catalog browse/details APIs
+- Book issuing
 - In-app reader and reading progress
 - Attention engine and camera capture
 - Reading analytics and engagement storage
@@ -382,7 +410,7 @@ NOT YET IMPLEMENTED:
 - Business API routes beyond health checks
 
 NEXT RECOMMENDED PHASE:
-Authentication and user management (registration, login, JWT)
+Development seed data for the catalog, then browse/details APIs (CORTEX-6). Authentication remains a later story.
 
 ==================================================
 20. KNOWN ISSUES
@@ -407,7 +435,8 @@ DATABASE OPERATIONS (operational guidance — not a current defect):
 ==================================================
 
 - User authentication and authorization
-- Database schema design and initial migrations
+- Catalog seed data
+- Book catalog browse/details APIs
 - Book library management
 - Token-based book issuing
 - In-app reading interface
