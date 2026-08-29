@@ -1,0 +1,15 @@
+{
+  "name": "cortex-library",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-powered digital library and adaptive reading ecosystem",
+  "scripts": {
+    "dev": "docker compose up --build",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:ml": "cd ml-service && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  }
+}
