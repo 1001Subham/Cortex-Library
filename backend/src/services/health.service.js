@@ -1,14 +1,8 @@
 import { checkDatabaseConnection } from '../config/database.js';
 
 export async function getHealthStatus() {
-  let databaseStatus = 'disconnected';
-
-  try {
-    const isConnected = await checkDatabaseConnection();
-    databaseStatus = isConnected ? 'connected' : 'disconnected';
-  } catch {
-    databaseStatus = 'disconnected';
-  }
+  const isConnected = await checkDatabaseConnection();
+  const databaseStatus = isConnected ? 'connected' : 'disconnected';
 
   return {
     status: databaseStatus === 'connected' ? 'ok' : 'degraded',

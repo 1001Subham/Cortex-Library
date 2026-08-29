@@ -319,7 +319,8 @@ PROJECT_CONTEXT.md
 18. Jira Mapping
 19. Current Development Status
 20. Known Issues
-21. Future Work
+21. Development Notes
+22. Future Work
 
 ==================================================
 19. CURRENT DEVELOPMENT STATUS
@@ -357,6 +358,18 @@ ARCHITECTURE DECISIONS:
 - Browser calls backend via VITE_API_URL (localhost-mapped port)
 - Inside Docker Compose, services communicate via service names
 - No database tables created yet; migrations folder is placeholder only
+- Database connectivity uses `pg` Pool in `backend/src/config/database.js`
+- Health check runs `SELECT 1` via pool; returns 503 when connection fails
+- Development logs include safe DB connection diagnostics (host/port/db/user, error code/message) but never passwords
+
+DATABASE CONNECTION (confirmed 2026-08-29):
+- Backend connects to PostgreSQL using discrete env vars: POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
+- Inside Docker Compose: POSTGRES_HOST=postgres
+- Connection pool configuration (`backend/src/config/database.js`):
+  - max pool size: 10
+  - connection timeout: 5 seconds
+  - idle timeout: 30 seconds
+- GET /api/health returns HTTP 200 with database: connected when pool can execute SELECT 1
 
 NOT YET IMPLEMENTED:
 - Authentication (JWT, Google OAuth)
@@ -375,10 +388,22 @@ Authentication and user management (registration, login, JWT)
 20. KNOWN ISSUES
 ==================================================
 
-- None identified in foundation phase.
+- None identified at this time.
 
 ==================================================
-21. FUTURE WORK
+21. DEVELOPMENT NOTES
+==================================================
+
+DATABASE OPERATIONS (operational guidance — not a current defect):
+
+- `POSTGRES_PASSWORD` in `.env` is only applied when the `postgres_data` Docker volume is first created.
+- Changing `POSTGRES_PASSWORD` in `.env` after the volume already exists does not automatically update the stored PostgreSQL role password.
+- If credentials are changed in `.env`, align the database role password explicitly, for example:
+  `ALTER USER cortex_user WITH PASSWORD 'your_password';`
+- Alternatively, recreate the volume only when local data loss is acceptable.
+
+==================================================
+22. FUTURE WORK
 ==================================================
 
 - User authentication and authorization
