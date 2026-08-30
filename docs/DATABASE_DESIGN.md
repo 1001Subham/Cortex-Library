@@ -2,7 +2,7 @@
 
 **Jira:** CORTEX-6 (US-01: Browse Digital Library) / CORTEX-10 (Design Digital Book Catalog Interface)
 
-**Status:** Approved catalog schema migrated to local PostgreSQL (2026-08-29). No seed data.
+**Status:** Approved catalog schema migrated. Development seed data applied (10 public-domain excerpts). No catalog APIs.
 
 **Scope:** Catalog metadata and internal content references only. Users, issues, sessions, attention, and recommendations are out of scope for this schema.
 
@@ -251,10 +251,10 @@ Applied to local Docker PostgreSQL (forward-only CREATE):
 5. `005_create_book_authors.sql`
 6. `006_create_book_categories.sql`
 
-Seeds remain a later task: categories tree, authors, published books with HTML files.
+Development seed (idempotent): `database/seeds/001_catalog_seed.sql`
 
 ---
 
 ## Implementation note
 
-Catalog tables exist and are empty. No seed data has been inserted.
+Catalog tables exist and contain development seed data (10 published books, HTML excerpts). Browse APIs are not implemented.

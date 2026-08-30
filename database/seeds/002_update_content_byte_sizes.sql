@@ -1,0 +1,10 @@
+UPDATE books SET content_byte_size = 1705, updated_at = now() WHERE id = 'b3000000-0000-4000-8000-000000000001';
+UPDATE books SET content_byte_size = 1331, updated_at = now() WHERE id = 'b3000000-0000-4000-8000-000000000002';
+UPDATE books SET content_byte_size = 1339, updated_at = now() WHERE id = 'b3000000-0000-4000-8000-000000000003';
+UPDATE books SET content_byte_size = 1465, updated_at = now() WHERE id = 'b3000000-0000-4000-8000-000000000004';
+UPDATE books SET content_byte_size = 1228, updated_at = now() WHERE id = 'b3000000-0000-4000-8000-000000000005';
+UPDATE books SET content_byte_size = 1236, updated_at = now() WHERE id = 'b3000000-0000-4000-8000-000000000006';
+UPDATE books SET content_byte_size = 1162, updated_at = now() WHERE id = 'b3000000-0000-4000-8000-000000000007';
+UPDATE books SET content_byte_size = 1132, updated_at = now() WHERE id = 'b3000000-0000-4000-8000-000000000008';
+UPDATE books SET content_byte_size = 1302, updated_at = now() WHERE id = 'b3000000-0000-4000-8000-000000000009';
+UPDATE books SET content_byte_size = 1259, updated_at = now() WHERE id = 'b3000000-0000-4000-8000-00000000000a';

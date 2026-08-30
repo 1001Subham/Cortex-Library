@@ -326,12 +326,12 @@ PROJECT_CONTEXT.md
 19. CURRENT DEVELOPMENT STATUS
 ==================================================
 
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 
-PHASE: Catalog schema migrated (CORTEX-10); no seed data; catalog APIs not implemented
+PHASE: Catalog schema + development seed data; catalog APIs not implemented
 
 JIRA:
-- CORTEX-6 — US-01: Browse Digital Library (in progress)
+- CORTEX-6 — US-01: Browse Digital Library (in progress; schema and seeds only)
 - CORTEX-10 — Design Digital Book Catalog Interface (schema implemented in PostgreSQL)
 
 COMPLETED:
@@ -390,7 +390,17 @@ DATABASE DESIGN (CORTEX-10, migrated 2026-08-29):
 - language_code VARCHAR(10)
 - Book content: application-managed files referenced by content_storage_key; first reader uses HTML
 - No pg_trgm; gen_random_uuid() from PostgreSQL 16 core
-- No seed data yet (empty catalog tables)
+- Development seed data (idempotent, applied 2026-08-30):
+  - File: database/seeds/001_catalog_seed.sql
+  - Sources/license notes: database/seeds/SOURCES.md
+  - Optional file generator: database/seeds/generate-book-files.mjs
+  - 11 categories (hierarchical), 9 authors, 10 published books
+  - 10 book_authors, 15 book_categories
+  - HTML excerpts at storage/books/{book_id}/content.html
+  - Project-owned SVG covers at storage/books/{book_id}/cover.svg
+  - Re-running the seed UPSERTs by deterministic UUID; it does not create duplicate rows
+  - ISBN is NULL (original editions predate ISBN)
+  - Seeded texts are public-domain US works; files are representative excerpts, not complete books
 
 BOOK CONTENT STRATEGY:
 - Users read inside Cortex Library (React reader); backend serves stored files
@@ -400,7 +410,6 @@ BOOK CONTENT STRATEGY:
 
 NOT YET IMPLEMENTED:
 - Authentication (JWT, Google OAuth)
-- Catalog seed data
 - Book catalog browse/details APIs
 - Book issuing
 - In-app reader and reading progress
@@ -410,7 +419,7 @@ NOT YET IMPLEMENTED:
 - Business API routes beyond health checks
 
 NEXT RECOMMENDED PHASE:
-Development seed data for the catalog, then browse/details APIs (CORTEX-6). Authentication remains a later story.
+Browse/details APIs for CORTEX-6, then catalog UI. Authentication remains a later story.
 
 ==================================================
 20. KNOWN ISSUES
@@ -435,7 +444,6 @@ DATABASE OPERATIONS (operational guidance — not a current defect):
 ==================================================
 
 - User authentication and authorization
-- Catalog seed data
 - Book catalog browse/details APIs
 - Book library management
 - Token-based book issuing
