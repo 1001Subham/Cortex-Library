@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import BookCover from '../components/BookCover';
-import { catalogHash } from '../hooks/useHashRoute';
+import { catalogHash, readerHash } from '../hooks/useHashRoute';
 import { getBook } from '../services/api';
 
 function BookDetailsPage({ bookId }) {
@@ -102,6 +102,15 @@ function BookDetailsPage({ bookId }) {
                 </div>
               )}
             </dl>
+            {book.content?.available && book.content.format === 'html' ? (
+              <a className="button button--primary" href={readerHash(book.id)}>
+                Read book
+              </a>
+            ) : (
+              <p className="status">
+                In-library reading is not available for this title yet.
+              </p>
+            )}
           </div>
         </article>
       )}

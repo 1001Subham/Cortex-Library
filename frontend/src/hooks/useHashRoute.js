@@ -11,11 +11,21 @@ export function bookHash(id) {
   return `#/books/${id}`;
 }
 
+export function readerHash(id) {
+  return `#/books/${id}/read`;
+}
+
 export function parseLocationHash() {
   const raw = window.location.hash.replace(/^#/, '') || '/';
 
   if (raw === '/status') {
     return { name: 'status' };
+  }
+
+  const readerMatch = raw.match(/^\/books\/([^/]+)\/read\/?$/);
+
+  if (readerMatch && UUID_PATTERN.test(readerMatch[1])) {
+    return { name: 'reader', id: readerMatch[1] };
   }
 
   const match = raw.match(/^\/books\/([^/]+)\/?$/);

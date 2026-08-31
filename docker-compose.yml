@@ -34,9 +34,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_local_env}
       ML_SERVICE_URL: http://ml-service:8000
       CORS_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
+      BOOK_STORAGE_ROOT: /storage
     volumes:
       - ./backend:/app
       - /app/node_modules
+      - ./storage:/storage:ro
     depends_on:
       postgres:
         condition: service_healthy

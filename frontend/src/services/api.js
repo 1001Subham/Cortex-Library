@@ -60,4 +60,27 @@ export async function getBook(id) {
   return request(`/api/books/${id}`);
 }
 
+export async function getBookContent(id) {
+  const response = await fetch(`${API_BASE_URL}/api/books/${id}/content`);
+
+  if (!response.ok) {
+    let message = `Request failed: ${response.status}`;
+
+    try {
+      const body = await response.json();
+      if (body?.message) {
+        message = body.message;
+      }
+    } catch {
+      // Keep the status-based message when the body is not JSON.
+    }
+
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
+  }
+
+  return response.text();
+}
+
 export { API_BASE_URL };

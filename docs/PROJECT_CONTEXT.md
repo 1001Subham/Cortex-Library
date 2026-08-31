@@ -328,11 +328,12 @@ PROJECT_CONTEXT.md
 
 Last updated: 2026-08-31
 
-PHASE: Catalog browse APIs and frontend catalog UI implemented (CORTEX-6)
+PHASE: In-app HTML reader implemented (catalog + content serving)
 
 JIRA:
 - CORTEX-6 — US-01: Browse Digital Library (API and frontend catalog implemented)
 - CORTEX-10 — Design Digital Book Catalog Interface (schema implemented in PostgreSQL)
+- In-app reader — published HTML excerpts served from internal storage (no issuing/progress/attention yet)
 
 COMPLETED:
 - Root monorepo structure (frontend, backend, ml-service, database, docs)
@@ -420,7 +421,26 @@ CATALOG API (CORTEX-6, 2026-08-31):
   - Title search (`q`), category filter (slug), pagination (8 per page)
   - Book cards: cover, title, authors, description, categories
   - Covers served by Vite middleware from `storage/books/{id}/cover.*` (read-only Docker mount at `/storage`)
-  - Loading, empty, and error states; no auth/reader/recommendations
+  - Loading, empty, and error states
+
+BOOK CONTENT API (2026-08-31):
+- GET /api/books/:id/content — streams stored HTML for a published book
+  - :id must be a UUID → 400 otherwise
+  - Resolves file only from the book's `content_storage_key` in PostgreSQL
+  - Allowed key shape: `storage/books/{same-book-id}/content.html` under BOOK_STORAGE_ROOT
+  - Client path/query parameters are ignored; arbitrary filesystem paths are rejected
+  - Unpublished/missing book → 404; missing or non-HTML content → 404
+  - Response: text/html; charset=utf-8
+- Backend Docker service mounts `./storage` read-only at `/storage` (`BOOK_STORAGE_ROOT=/storage`)
+
+IN-APP READER (2026-08-31):
+- Hash route: `#/books/:id/read`
+- Book details "Read book" action for HTML content
+- Loads GET /api/books/:id and GET /api/books/:id/content
+- Shows title, authors, readable typography; back to details and library
+- Loading, missing-content, and error states
+- HTML is rendered from the stored article body (scripts and unsafe tags stripped)
+- No authentication, reading progress, attention analysis, recommendations, or issuing
 
 BOOK CONTENT STRATEGY:
 - Users read inside Cortex Library (React reader); backend serves stored files
@@ -431,13 +451,13 @@ BOOK CONTENT STRATEGY:
 NOT YET IMPLEMENTED:
 - Authentication (JWT, Google OAuth)
 - Book issuing
-- In-app reader and reading progress
+- Reading progress
 - Attention engine and camera capture
 - Reading analytics and engagement storage
 - Recommendation engine
 
 NEXT RECOMMENDED PHASE:
-Authentication (JWT / Google OAuth). Catalog browse is available without login.
+Authentication (JWT / Google OAuth), then book issuing and reading progress. Catalog browse and in-library HTML reading are available without login.
 
 ==================================================
 20. KNOWN ISSUES
@@ -464,7 +484,6 @@ DATABASE OPERATIONS (operational guidance — not a current defect):
 - User authentication and authorization
 - Book library management
 - Token-based book issuing
-- In-app reading interface
 - Reading session and progress tracking
 - Attention engine integration (OpenCV, MediaPipe)
 - Reading analytics dashboard

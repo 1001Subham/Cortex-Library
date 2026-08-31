@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { after, before, test } from 'node:test';
 import app from './app.js';
 import { closeDatabasePool } from './config/database.js';
+import { resolveHtmlContentPath } from './services/bookContent.service.js';
 
 const server = app.listen(0);
 const { port } = server.address();
@@ -105,4 +108,79 @@ test('GET /api/books/:id returns 404 for a missing book', async () => {
 
   assert.equal(status, 404);
   assert.equal(body.message, 'Book not found.');
+});
+
+test('GET /api/books/:id/content streams stored HTML for a published book', async () => {
+  const id = 'b3000000-0000-4000-8000-000000000001';
+  const response = await fetch(`${baseUrl}/api/books/${id}/content`);
+  const body = await response.text();
+
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type'), /text\/html/);
+  assert.match(body, /Down the Rabbit-Hole/);
+});
+
+test('GET /api/books/:id/content ignores client path query parameters', async () => {
+  const id = 'b3000000-0000-4000-8000-000000000001';
+  const response = await fetch(
+    `${baseUrl}/api/books/${id}/content?path=../../etc/passwd`
+  );
+  const body = await response.text();
+
+  assert.equal(response.status, 200);
+  assert.match(body, /Alice's Adventures in Wonderland/);
+  assert.doesNotMatch(body, /root:/);
+});
+
+test('GET /api/books/:id/content returns 400 for an invalid UUID', async () => {
+  const { status, body } = await getJson('/api/books/not-a-uuid/content');
+
+  assert.equal(status, 400);
+  assert.equal(body.message, 'Book id must be a valid UUID.');
+});
+
+test('GET /api/books/:id/content returns 404 for a missing book', async () => {
+  const { status, body } = await getJson(
+    '/api/books/00000000-0000-4000-8000-000000000000/content'
+  );
+
+  assert.equal(status, 404);
+  assert.equal(body.message, 'Book not found.');
+});
+
+test('resolveHtmlContentPath only allows the book HTML key from storage', () => {
+  const id = 'b3000000-0000-4000-8000-000000000001';
+  const storageRoot = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    '../../storage'
+  );
+  const resolved = resolveHtmlContentPath(
+    id,
+    `storage/books/${id}/content.html`,
+    storageRoot
+  );
+
+  assert.equal(
+    path.normalize(resolved),
+    path.normalize(path.join(storageRoot, 'books', id, 'content.html'))
+  );
+
+  assert.throws(
+    () =>
+      resolveHtmlContentPath(
+        id,
+        'storage/books/b3000000-0000-4000-8000-000000000002/content.html',
+        storageRoot
+      ),
+    { statusCode: 404 }
+  );
+  assert.throws(
+    () =>
+      resolveHtmlContentPath(id, 'storage/books/' + id + '/../cover.svg', storageRoot),
+    { statusCode: 404 }
+  );
+  assert.throws(
+    () => resolveHtmlContentPath(id, '/etc/passwd', storageRoot),
+    { statusCode: 404 }
+  );
 });

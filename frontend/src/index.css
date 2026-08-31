@@ -272,6 +272,83 @@ select {
   margin-top: 1rem;
 }
 
+.button {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0.7rem 1.1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.button--primary {
+  background: #16213e;
+  color: #f7fafc;
+}
+
+.button--primary:hover,
+.button--primary:focus-visible {
+  background: #1a2a4f;
+}
+
+.page--reader {
+  width: min(760px, calc(100% - 2rem));
+}
+
+.reader-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.reader-toolbar .back-link {
+  margin-bottom: 0;
+}
+
+.reader-header {
+  margin: 1.25rem 0 1.5rem;
+}
+
+.reader-content {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: clamp(1.25rem, 4vw, 2.25rem);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #1a1a2e;
+}
+
+.reader-content h1,
+.reader-content h2,
+.reader-content h3 {
+  line-height: 1.3;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.reader-content h1:first-child,
+.reader-content h2:first-child {
+  margin-top: 0;
+}
+
+.reader-content p {
+  margin: 0 0 1.1rem;
+}
+
+.reader-content blockquote {
+  margin: 0 0 1.25rem;
+  padding: 0.25rem 0 0.25rem 1rem;
+  border-left: 3px solid #cbd5e0;
+  color: #4a5568;
+}
+
+@media (max-width: 720px) {
+  .reader-content {
+    font-size: 1.05rem;
+  }
+}
+
 .meta-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

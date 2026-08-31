@@ -1,6 +1,7 @@
 import BookDetailsPage from './pages/BookDetailsPage';
 import CatalogPage from './pages/CatalogPage';
 import HomePage from './pages/HomePage';
+import ReaderPage from './pages/ReaderPage';
 import { catalogHash, useHashRoute } from './hooks/useHashRoute';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
           <a href="#/status">System status</a>
         </div>
       </nav>
+      {route.name === 'reader' && <ReaderPage bookId={route.id} />}
       {route.name === 'detail' && <BookDetailsPage bookId={route.id} />}
       {route.name === 'status' && <HomePage />}
       {route.name === 'catalog' && <CatalogPage />}
