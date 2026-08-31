@@ -14,6 +14,10 @@ const config = {
   bookStorageRoot: path.resolve(
     process.env.BOOK_STORAGE_ROOT || path.join(__dirname, '../../../storage')
   ),
+  jwt: {
+    secret: process.env.JWT_SECRET || '',
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  },
   database: {
     host: process.env.POSTGRES_HOST || 'localhost',
     port: parseInt(process.env.POSTGRES_PORT || '5432', 10),

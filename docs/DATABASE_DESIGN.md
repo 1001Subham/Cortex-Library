@@ -2,9 +2,9 @@
 
 **Jira:** CORTEX-6 (US-01: Browse Digital Library) / CORTEX-10 (Design Digital Book Catalog Interface)
 
-**Status:** Approved catalog schema migrated. Development seed data applied (10 public-domain excerpts). Catalog browse APIs implemented (`GET /api/books`, `GET /api/books/:id`). Content serving: `GET /api/books/:id/content`. Catalog UI and in-app HTML reader implemented.
+**Status:** Catalog schema migrated. Users table migrated for email/password JWT auth. Development seed data applied (10 public-domain excerpts). Catalog browse APIs implemented (`GET /api/books`, `GET /api/books/:id`). Content serving: `GET /api/books/:id/content`. Catalog UI and in-app HTML reader implemented. Auth APIs: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`.
 
-**Scope:** Catalog metadata and internal content references only. Users, issues, sessions, attention, and recommendations are out of scope for this schema.
+**Scope:** Catalog metadata, internal content references, and the minimal `users` table for authentication. Issues, sessions, attention, and recommendations remain out of scope.
 
 ---
 
@@ -17,8 +17,9 @@
 | `books` | Catalog record, cover reference, and internal content reference. |
 | `book_authors` | Many-to-many: books ↔ authors, with credit order. |
 | `book_categories` | Many-to-many: books ↔ categories. **No** `books.primary_category_id`. |
+| `users` | Authenticated accounts (email + password hash). No profile fields yet. |
 
-Not created in this phase: `users`, `book_issues`, `reading_sessions`, `reading_progress`, `attention_measurements`, `recommendations`.
+Not created in this phase: `book_issues`, `reading_sessions`, `reading_progress`, `attention_measurements`, `recommendations`.
 
 ---
 
@@ -102,6 +103,18 @@ Composite PK `(book_id, category_id)`.
 
 **Not added:** `is_primary` on the junction. Browse can order by category tree or name. A display-primary flag can be added later without changing `books`.
 
+### `users`
+
+| Column | Type | Notes |
+|--------|------|--------|
+| `id` | UUID | Default `gen_random_uuid()` |
+| `email` | VARCHAR(254) | Unique; stored lowercased and trimmed |
+| `password_hash` | VARCHAR(255) | bcrypt hash only; never plaintext; never returned by APIs |
+| `created_at` | TIMESTAMPTZ NOT NULL | Default `now()` |
+| `updated_at` | TIMESTAMPTZ NOT NULL | Default `now()` |
+
+**Not added:** display name, roles, OAuth provider ids, or email-verified flags. Google OAuth can add nullable columns later without rewriting this table.
+
 ---
 
 ## 3. Relationships
@@ -110,11 +123,13 @@ Composite PK `(book_id, category_id)`.
 categories.parent_id ──► categories.id          (optional tree)
 books ◄──► authors     via book_authors        (M:N)
 books ◄──► categories  via book_categories     (M:N)
+users                                 (independent; no catalog FKs yet)
 ```
 
 - One book, many authors; one author, many books.
 - One book, many categories (including a parent and a child if desired); one category, many books.
 - A category may have one parent; cycles must be prevented in application logic (CHECK cannot easily forbid all cycles).
+- Users are not linked to books yet. Future `book_issues` / `reading_progress` will reference `users.id` and `books.id`.
 
 ---
 
@@ -127,6 +142,7 @@ books ◄──► categories  via book_categories     (M:N)
 | `books` | `id` (UUID) |
 | `book_authors` | `(book_id, author_id)` |
 | `book_categories` | `(book_id, category_id)` |
+| `users` | `id` (UUID) |
 
 ---
 
@@ -150,6 +166,7 @@ books ◄──► categories  via book_categories     (M:N)
 - `authors.slug`
 - `books.slug`
 - `books.isbn` UNIQUE where `isbn IS NOT NULL`
+- `users.email`
 
 **Checks**
 
@@ -162,8 +179,10 @@ books ◄──► categories  via book_categories     (M:N)
 - `books.estimated_reading_minutes` NULL or `>= 0`
 - `book_authors.author_order` `>= 1`
 - `categories`: `parent_id IS DISTINCT FROM id` (no self-parent)
+- `users.email` equals `lower(trim(email))` and is non-empty
+- `users.password_hash` is non-empty
 
-**Not-null:** titles, slugs, status, language_code, timestamps as listed above.
+**Not-null:** titles, slugs, status, language_code, user email/password_hash, timestamps as listed above.
 
 **UUID generation:** PostgreSQL 16 provides `gen_random_uuid()` in core. `pgcrypto` is **not required** for this catalog. Do **not** enable `pg_trgm` in the first migration.
 
@@ -177,6 +196,7 @@ books ◄──► categories  via book_categories     (M:N)
 - `authors(slug)`
 - `books(slug)`
 - partial unique `books(isbn)` WHERE `isbn IS NOT NULL`
+- `users(email)`
 
 **Foreign keys / filters**
 
@@ -220,7 +240,7 @@ books ◄──► categories  via book_categories     (M:N)
 - **Categories vs genres:** one hierarchy via `parent_id`. Avoids duplicate Fiction/Mystery taxonomies.
 - **M:N categories:** a title can be Mystery and Historical; recommendations can use multiple tags later.
 - **Publisher as VARCHAR:** a `publishers` table is not needed for CORTEX-6.
-- **No users in this schema:** issuing and progress stay future tables with FKs to `books.id`.
+- **Users are independent of catalog:** issuing and progress stay future tables with FKs to `users.id` and `books.id`.
 
 ---
 
@@ -230,13 +250,11 @@ books ◄──► categories  via book_categories     (M:N)
 |----------------|------------------------------|
 | In-app reader | `content_storage_key`, `content_format`, `total_pages` |
 | Resume / progress | New table `reading_progress(user_id, book_id, position, …)` |
-| Book issues / tokens | New table referencing `books.id` |
+| Book issues / tokens | New table referencing `users.id` and `books.id` |
 | Recommendations | Join `book_categories` + future reading history |
 | Search | Add `pg_trgm` later without changing entity list |
 | EPUB | Same files + `content_format`; parser later |
-| Auth | Independent `users` table; no catalog rewrite |
-
-Do not add `users` or session tables until those stories start.
+| Auth | `users` table; JWT in the API; Google OAuth later |
 
 ---
 
@@ -250,6 +268,7 @@ Applied to local Docker PostgreSQL (forward-only CREATE):
 4. `004_create_books.sql`
 5. `005_create_book_authors.sql`
 6. `006_create_book_categories.sql`
+7. `007_create_users.sql`
 
 Development seed (idempotent): `database/seeds/001_catalog_seed.sql`
 
@@ -257,4 +276,4 @@ Development seed (idempotent): `database/seeds/001_catalog_seed.sql`
 
 ## Implementation note
 
-Catalog tables exist and contain development seed data (10 published books, HTML excerpts). Browse APIs: `GET /api/books` and `GET /api/books/:id`. Content API: `GET /api/books/:id/content` (key-constrained HTML files only). Catalog UI and in-app HTML reader are implemented.
+Catalog tables exist and contain development seed data (10 published books, HTML excerpts). Browse APIs: `GET /api/books` and `GET /api/books/:id`. Content API: `GET /api/books/:id/content` (key-constrained HTML files only). Catalog UI and in-app HTML reader are implemented (public, no login). `users` exists for email/password registration and JWT login; catalog and reader routes stay unauthenticated.

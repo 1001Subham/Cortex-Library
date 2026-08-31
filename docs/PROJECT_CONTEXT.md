@@ -328,12 +328,13 @@ PROJECT_CONTEXT.md
 
 Last updated: 2026-08-31
 
-PHASE: In-app HTML reader implemented (catalog + content serving)
+PHASE: Email/password JWT authentication implemented (catalog + reader remain public)
 
 JIRA:
 - CORTEX-6 — US-01: Browse Digital Library (API and frontend catalog implemented)
 - CORTEX-10 — Design Digital Book Catalog Interface (schema implemented in PostgreSQL)
 - In-app reader — published HTML excerpts served from internal storage (no issuing/progress/attention yet)
+- Authentication — register, login, GET /api/auth/me, requireAuth middleware (no Google OAuth yet)
 
 COMPLETED:
 - Root monorepo structure (frontend, backend, ml-service, database, docs)
@@ -366,6 +367,11 @@ ARCHITECTURE DECISIONS:
 - Database connectivity uses `pg` Pool in `backend/src/config/database.js`
 - Health check runs `SELECT 1` via pool; returns 503 when connection fails
 - Development logs include safe DB connection diagnostics (host/port/db/user, error code/message) but never passwords
+- Authentication uses bcryptjs password hashes and jsonwebtoken access tokens
+- JWT_SECRET and JWT_EXPIRES_IN come from environment configuration (Docker Compose passes them into the backend)
+- requireAuth middleware reads `Authorization: Bearer <token>` and attaches `req.user` (public fields only)
+- Catalog browse, book details, and HTML content routes stay public (no requireAuth)
+- Password hashes, plaintext passwords, and JWT secrets are never returned in API bodies or logged
 
 DATABASE CONNECTION (confirmed 2026-08-29):
 - Backend connects to PostgreSQL using discrete env vars: POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
@@ -385,7 +391,8 @@ DATABASE DESIGN (CORTEX-10, migrated 2026-08-29):
   - database/migrations/004_create_books.sql
   - database/migrations/005_create_book_authors.sql
   - database/migrations/006_create_book_categories.sql
-- Entities created: categories, authors, books, book_authors, book_categories
+  - database/migrations/007_create_users.sql
+- Entities created: categories, authors, books, book_authors, book_categories, users
 - books M:N categories via book_categories (no books.primary_category_id)
 - categories.parent_id for hierarchical taxonomy; no separate genres table
 - language_code VARCHAR(10)
@@ -440,7 +447,22 @@ IN-APP READER (2026-08-31):
 - Shows title, authors, readable typography; back to details and library
 - Loading, missing-content, and error states
 - HTML is rendered from the stored article body (scripts and unsafe tags stripped)
-- No authentication, reading progress, attention analysis, recommendations, or issuing
+- Reader remains public (no login required); no reading progress, attention analysis, recommendations, or issuing
+
+AUTHENTICATION API (2026-08-31):
+- POST /api/auth/register — create account (email + password)
+  - Email stored unique and lowercased; password stored as bcrypt hash
+  - Success: 201 `{ user: { id, email, createdAt, updatedAt }, token }`
+  - Invalid body → 400; duplicate email → 409
+- POST /api/auth/login — email + password
+  - Success: 200 `{ user, token }`
+  - Invalid body → 400; unknown email or wrong password → 401 (same message)
+- GET /api/auth/me — current user from JWT
+  - Header: `Authorization: Bearer <token>`
+  - Success: 200 `{ user }`
+  - Missing, invalid, or expired token → 401
+- password_hash is never included in responses
+- Tests: backend `npm test` (node:test, src/books.api.test.js then src/auth.api.test.js) against PostgreSQL inside Docker
 
 BOOK CONTENT STRATEGY:
 - Users read inside Cortex Library (React reader); backend serves stored files
@@ -449,15 +471,16 @@ BOOK CONTENT STRATEGY:
 - content_format CHECK: html | epub | markdown (EPUB parsing later)
 
 NOT YET IMPLEMENTED:
-- Authentication (JWT, Google OAuth)
+- Google OAuth
 - Book issuing
 - Reading progress
 - Attention engine and camera capture
 - Reading analytics and engagement storage
 - Recommendation engine
+- Frontend login/register UI
 
 NEXT RECOMMENDED PHASE:
-Authentication (JWT / Google OAuth), then book issuing and reading progress. Catalog browse and in-library HTML reading are available without login.
+Book issuing (authenticated), then reading progress. Catalog browse and in-library HTML reading remain available without login. Google OAuth is deferred.
 
 ==================================================
 20. KNOWN ISSUES
@@ -481,8 +504,8 @@ DATABASE OPERATIONS (operational guidance — not a current defect):
 22. FUTURE WORK
 ==================================================
 
-- User authentication and authorization
-- Book library management
+- Google OAuth
+- Book library management / issuing
 - Token-based book issuing
 - Reading session and progress tracking
 - Attention engine integration (OpenCV, MediaPipe)
