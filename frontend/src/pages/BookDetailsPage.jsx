@@ -40,6 +40,9 @@ function BookDetailsPage({ bookId }) {
     };
   }, [bookId]);
 
+  const canRead =
+    book?.content?.available && book.content.format === 'html';
+
   return (
     <main className="page page--detail">
       <a className="back-link" href={catalogHash()}>
@@ -62,7 +65,7 @@ function BookDetailsPage({ bookId }) {
             coverImageKey={book.coverImageKey}
           />
           <div>
-            <p className="eyebrow">Book details</p>
+            <p className="eyebrow">Title details</p>
             <h1>{book.title}</h1>
             <p className="book-detail__authors">
               {book.authors?.map((author) => author.displayName).join(', ')}
@@ -102,15 +105,20 @@ function BookDetailsPage({ bookId }) {
                 </div>
               )}
             </dl>
-            {book.content?.available && book.content.format === 'html' ? (
-              <a className="button button--primary" href={readerHash(book.id)}>
-                Read book
+            <div className="hero__actions">
+              {canRead ? (
+                <a className="button button--primary" href={readerHash(book.id)}>
+                  Read
+                </a>
+              ) : (
+                <p className="status">
+                  In-library reading is not available for this title yet.
+                </p>
+              )}
+              <a className="button button--ghost" href={catalogHash()}>
+                View catalog
               </a>
-            ) : (
-              <p className="status">
-                In-library reading is not available for this title yet.
-              </p>
-            )}
+            </div>
           </div>
         </article>
       )}

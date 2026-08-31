@@ -10,10 +10,11 @@ import { useHashRoute } from './hooks/useHashRoute';
 
 function AppRoutes() {
   const route = useHashRoute();
+  const reading = route.name === 'reader';
 
   return (
-    <div className="app">
-      <SiteNav />
+    <div className={reading ? 'app app--reader' : 'app'}>
+      {!reading && <SiteNav />}
       {route.name === 'reader' && <ReaderPage bookId={route.id} />}
       {route.name === 'detail' && <BookDetailsPage bookId={route.id} />}
       {route.name === 'status' && <HomePage />}

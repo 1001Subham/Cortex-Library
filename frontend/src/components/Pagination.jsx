@@ -12,7 +12,7 @@ function Pagination({ page, totalPages, onPageChange }) {
       >
         Previous
       </button>
-      <span>
+      <span className="pagination__status">
         Page {page} of {totalPages}
       </span>
       <button

@@ -8,7 +8,7 @@ function CatalogToolbar({
   return (
     <div className="catalog-toolbar">
       <label className="catalog-toolbar__search">
-        <span className="visually-hidden">Search books</span>
+        <span>Search the library</span>
         <input
           type="search"
           value={queryInput}
@@ -16,20 +16,25 @@ function CatalogToolbar({
           placeholder="Search by title"
         />
       </label>
-      <label className="catalog-toolbar__filter">
-        <span>Category</span>
-        <select
-          value={category}
-          onChange={(event) => onCategoryChange(event.target.value)}
+      <div className="catalog-toolbar__chips" role="group" aria-label="Filter by category">
+        <button
+          type="button"
+          className={`chip${!category ? ' is-active' : ''}`}
+          onClick={() => onCategoryChange('')}
         >
-          <option value="">All categories</option>
-          {categories.map((item) => (
-            <option key={item.slug} value={item.slug}>
-              {item.name}
-            </option>
-          ))}
-        </select>
-      </label>
+          All
+        </button>
+        {categories.map((item) => (
+          <button
+            key={item.slug}
+            type="button"
+            className={`chip${category === item.slug ? ' is-active' : ''}`}
+            onClick={() => onCategoryChange(item.slug)}
+          >
+            {item.name}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

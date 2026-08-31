@@ -1,20 +1,40 @@
 import BookCard from '../components/BookCard';
+import BookShelf from '../components/BookShelf';
 import CatalogToolbar from '../components/CatalogToolbar';
+import FeaturedHero from '../components/FeaturedHero';
 import Pagination from '../components/Pagination';
 import { useCatalog } from '../hooks/useCatalog';
 
+function shelvesFrom(books) {
+  const groups = new Map();
+
+  books.forEach((book) => {
+    (book.categories || []).forEach((category) => {
+      const key = category.slug || category.name;
+      if (!groups.has(key)) {
+        groups.set(key, { title: category.name, books: [] });
+      }
+
+      const group = groups.get(key);
+      if (!group.books.some((item) => item.id === book.id)) {
+        group.books.push(book);
+      }
+    });
+  });
+
+  return [...groups.values()].filter((group) => group.books.length >= 2);
+}
+
 function CatalogPage() {
   const catalog = useCatalog();
+  const featured = catalog.books[0];
+  const categoryShelves = shelvesFrom(catalog.books);
 
   return (
-    <main className="page">
-      <header className="page__header">
-        <p className="eyebrow">Cortex Library</p>
-        <h1>Digital library</h1>
-        <p className="lede">
-          Browse public-domain titles hosted inside Cortex Library.
-        </p>
-      </header>
+    <main className="page page--catalog">
+      {!catalog.loading && !catalog.error && featured && (
+        <FeaturedHero book={featured} />
+      )}
 
       <CatalogToolbar
         queryInput={catalog.queryInput}
@@ -43,13 +63,30 @@ function CatalogPage() {
         <>
           <p className="result-count">
             {catalog.pagination.total} title
-            {catalog.pagination.total === 1 ? '' : 's'}
+            {catalog.pagination.total === 1 ? '' : 's'} in the collection
           </p>
-          <section className="book-grid">
-            {catalog.books.map((book) => (
-              <BookCard key={book.id} book={book} />
-            ))}
+
+          <BookShelf title="On this shelf" books={catalog.books} />
+
+          {categoryShelves.map((shelf) => (
+            <BookShelf
+              key={shelf.title}
+              title={shelf.title}
+              books={shelf.books}
+            />
+          ))}
+
+          <section className="catalog-grid-section">
+            <header className="book-shelf__header">
+              <h2>Browse titles</h2>
+            </header>
+            <div className="book-grid">
+              {catalog.books.map((book) => (
+                <BookCard key={book.id} book={book} />
+              ))}
+            </div>
           </section>
+
           <Pagination
             page={catalog.pagination.page}
             totalPages={catalog.pagination.totalPages}

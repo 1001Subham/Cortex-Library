@@ -81,13 +81,14 @@ function AuthForm({
 
   return (
     <main className="page page--auth">
-      <header className="page__header">
-        <p className="eyebrow">Cortex Library</p>
-        <h1>{title}</h1>
-        <p className="lede">{lede}</p>
-      </header>
+      <div className="auth-panel">
+        <header className="page__header">
+          <p className="eyebrow">Cortex Library</p>
+          <h1>{title}</h1>
+          <p className="lede">{lede}</p>
+        </header>
 
-      <form className="auth-card" onSubmit={handleSubmit} noValidate>
+        <form className="auth-card" onSubmit={handleSubmit} noValidate>
         {error && (
           <div className="banner banner--error" role="alert">
             <p>{error}</p>
@@ -133,7 +134,8 @@ function AuthForm({
         </button>
 
         <p className="auth-footer">{footer}</p>
-      </form>
+        </form>
+      </div>
     </main>
   );
 }

@@ -78,50 +78,55 @@ function ReaderPage({ bookId }) {
   const authors = book?.authors?.map((author) => author.displayName).join(', ');
 
   return (
-    <main className="page page--reader">
-      <div className="reader-toolbar">
-        {book ? (
-          <a className="back-link" href={bookHash(book.id)}>
-            Back to details
+    <main className="reader">
+      <header className="reader__chrome">
+        <div className="reader__chrome-inner">
+          {book ? (
+            <a className="reader__nav" href={bookHash(book.id)}>
+              Details
+            </a>
+          ) : (
+            <a className="reader__nav" href={catalogHash()}>
+              Catalog
+            </a>
+          )}
+          <div className="reader__chrome-title">
+            {book && (
+              <>
+                <p className="eyebrow">Now reading</p>
+                <h1>{book.title}</h1>
+                {authors && <p>{authors}</p>}
+              </>
+            )}
+          </div>
+          <a className="reader__nav" href={catalogHash()}>
+            Library
           </a>
-        ) : (
-          <a className="back-link" href={catalogHash()}>
-            Back to catalog
-          </a>
+        </div>
+      </header>
+
+      <div className="reader__stage">
+        {loading && <p className="status">Opening book…</p>}
+
+        {error && (
+          <div className="banner banner--error" role="alert">
+            <p>{error}</p>
+          </div>
         )}
-        <a className="back-link" href={catalogHash()}>
-          Library
-        </a>
+
+        {missingContent && (
+          <div className="banner banner--error" role="alert">
+            <p>This title does not have in-library HTML content yet.</p>
+          </div>
+        )}
+
+        {readableHtml && (
+          <article
+            className="reader__page"
+            dangerouslySetInnerHTML={{ __html: readableHtml }}
+          />
+        )}
       </div>
-
-      {loading && <p className="status">Opening book...</p>}
-
-      {error && (
-        <div className="banner banner--error" role="alert">
-          <p>{error}</p>
-        </div>
-      )}
-
-      {missingContent && (
-        <div className="banner banner--error" role="alert">
-          <p>This title does not have in-library HTML content yet.</p>
-        </div>
-      )}
-
-      {book && !loading && (
-        <header className="reader-header">
-          <p className="eyebrow">In-library reader</p>
-          <h1>{book.title}</h1>
-          {authors && <p className="book-detail__authors">{authors}</p>}
-        </header>
-      )}
-
-      {readableHtml && (
-        <article
-          className="reader-content"
-          dangerouslySetInnerHTML={{ __html: readableHtml }}
-        />
-      )}
     </main>
   );
 }

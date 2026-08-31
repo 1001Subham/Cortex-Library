@@ -8,7 +8,9 @@ function RegisterPage() {
   if (!ready) {
     return (
       <main className="page page--auth">
-        <p className="status">Checking your session…</p>
+        <div className="auth-panel">
+          <p className="status">Checking your session…</p>
+        </div>
       </main>
     );
   }
@@ -16,16 +18,18 @@ function RegisterPage() {
   if (user) {
     return (
       <main className="page page--auth">
-        <header className="page__header">
-          <p className="eyebrow">Cortex Library</p>
-          <h1>You already have an account</h1>
-          <p className="lede">Signed in as {user.email}.</p>
-        </header>
-        <p>
-          <a className="button button--primary" href={catalogHash()}>
-            Back to catalog
-          </a>
-        </p>
+        <div className="auth-panel">
+          <header className="page__header">
+            <p className="eyebrow">Cortex Library</p>
+            <h1>You already have an account</h1>
+            <p className="lede">Signed in as {user.email}.</p>
+          </header>
+          <p>
+            <a className="button button--primary" href={catalogHash()}>
+              Back to catalog
+            </a>
+          </p>
+        </div>
       </main>
     );
   }
