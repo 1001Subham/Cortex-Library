@@ -73,9 +73,11 @@ services:
       - "${FRONTEND_PORT:-5173}:5173"
     environment:
       VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+      BOOK_STORAGE_ROOT: /storage
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - ./storage:/storage:ro
     depends_on:
       backend:
         condition: service_healthy

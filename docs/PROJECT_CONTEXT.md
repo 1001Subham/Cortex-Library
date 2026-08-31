@@ -328,10 +328,10 @@ PROJECT_CONTEXT.md
 
 Last updated: 2026-08-31
 
-PHASE: Catalog browse APIs implemented (CORTEX-6); catalog UI not implemented
+PHASE: Catalog browse APIs and frontend catalog UI implemented (CORTEX-6)
 
 JIRA:
-- CORTEX-6 — US-01: Browse Digital Library (API complete; frontend catalog not implemented)
+- CORTEX-6 — US-01: Browse Digital Library (API and frontend catalog implemented)
 - CORTEX-10 — Design Digital Book Catalog Interface (schema implemented in PostgreSQL)
 
 COMPLETED:
@@ -415,6 +415,12 @@ CATALOG API (CORTEX-6, 2026-08-31):
   - Unpublished or missing → 404
 - Implementation: routes → controllers → services → repositories; parameterized SQL
 - Tests: backend `npm test` (node:test, src/books.api.test.js) against PostgreSQL
+- Frontend catalog (CORTEX-6, 2026-08-31):
+  - Hash routes: `#/` catalog, `#/books/:id` details, `#/status` health page
+  - Title search (`q`), category filter (slug), pagination (8 per page)
+  - Book cards: cover, title, authors, description, categories
+  - Covers served by Vite middleware from `storage/books/{id}/cover.*` (read-only Docker mount at `/storage`)
+  - Loading, empty, and error states; no auth/reader/recommendations
 
 BOOK CONTENT STRATEGY:
 - Users read inside Cortex Library (React reader); backend serves stored files
@@ -424,7 +430,6 @@ BOOK CONTENT STRATEGY:
 
 NOT YET IMPLEMENTED:
 - Authentication (JWT, Google OAuth)
-- Frontend catalog browse/details UI
 - Book issuing
 - In-app reader and reading progress
 - Attention engine and camera capture
@@ -432,7 +437,7 @@ NOT YET IMPLEMENTED:
 - Recommendation engine
 
 NEXT RECOMMENDED PHASE:
-Frontend catalog browse/details UI for CORTEX-6. Authentication remains a later story.
+Authentication (JWT / Google OAuth). Catalog browse is available without login.
 
 ==================================================
 20. KNOWN ISSUES
@@ -457,7 +462,6 @@ DATABASE OPERATIONS (operational guidance — not a current defect):
 ==================================================
 
 - User authentication and authorization
-- Frontend catalog browse/details UI
 - Book library management
 - Token-based book issuing
 - In-app reading interface
