@@ -52,4 +52,8 @@ export async function checkDatabaseConnection() {
   }
 }
 
+export async function closeDatabasePool() {
+  await pool.end();
+}
+
 export default pool;

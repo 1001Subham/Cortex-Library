@@ -2,7 +2,7 @@
 
 **Jira:** CORTEX-6 (US-01: Browse Digital Library) / CORTEX-10 (Design Digital Book Catalog Interface)
 
-**Status:** Approved catalog schema migrated. Development seed data applied (10 public-domain excerpts). No catalog APIs.
+**Status:** Approved catalog schema migrated. Development seed data applied (10 public-domain excerpts). Catalog browse APIs implemented (`GET /api/books`, `GET /api/books/:id`). Catalog UI not implemented.
 
 **Scope:** Catalog metadata and internal content references only. Users, issues, sessions, attention, and recommendations are out of scope for this schema.
 
@@ -257,4 +257,4 @@ Development seed (idempotent): `database/seeds/001_catalog_seed.sql`
 
 ## Implementation note
 
-Catalog tables exist and contain development seed data (10 published books, HTML excerpts). Browse APIs are not implemented.
+Catalog tables exist and contain development seed data (10 published books, HTML excerpts). Browse APIs: `GET /api/books` and `GET /api/books/:id`. Catalog UI is not implemented.

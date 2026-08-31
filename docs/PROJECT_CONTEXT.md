@@ -326,12 +326,12 @@ PROJECT_CONTEXT.md
 19. CURRENT DEVELOPMENT STATUS
 ==================================================
 
-Last updated: 2026-08-30
+Last updated: 2026-08-31
 
-PHASE: Catalog schema + development seed data; catalog APIs not implemented
+PHASE: Catalog browse APIs implemented (CORTEX-6); catalog UI not implemented
 
 JIRA:
-- CORTEX-6 — US-01: Browse Digital Library (in progress; schema and seeds only)
+- CORTEX-6 — US-01: Browse Digital Library (API complete; frontend catalog not implemented)
 - CORTEX-10 — Design Digital Book Catalog Interface (schema implemented in PostgreSQL)
 
 COMPLETED:
@@ -402,6 +402,20 @@ DATABASE DESIGN (CORTEX-10, migrated 2026-08-29):
   - ISBN is NULL (original editions predate ISBN)
   - Seeded texts are public-domain US works; files are representative excerpts, not complete books
 
+CATALOG API (CORTEX-6, 2026-08-31):
+- GET /api/books — published catalog list
+  - Query: page (default 1), limit (1–50, default 10), q (title ILIKE, max 200 chars), category (UUID or slug), sort (title | published_at | publication_year; default title)
+  - Category filter includes descendant categories (recursive)
+  - Response: { books, pagination: { page, limit, total, totalPages } }
+  - List items include authors, categories, contentAvailable
+  - Invalid query → 400
+- GET /api/books/:id — published book details
+  - :id must be a UUID → 400 otherwise
+  - Includes authors, categories (with parentId), content availability (format, totalPages, estimatedReadingMinutes, byteSize)
+  - Unpublished or missing → 404
+- Implementation: routes → controllers → services → repositories; parameterized SQL
+- Tests: backend `npm test` (node:test, src/books.api.test.js) against PostgreSQL
+
 BOOK CONTENT STRATEGY:
 - Users read inside Cortex Library (React reader); backend serves stored files
 - Do not redirect to external sites, require PDF download, or store external reading URLs
@@ -410,16 +424,15 @@ BOOK CONTENT STRATEGY:
 
 NOT YET IMPLEMENTED:
 - Authentication (JWT, Google OAuth)
-- Book catalog browse/details APIs
+- Frontend catalog browse/details UI
 - Book issuing
 - In-app reader and reading progress
 - Attention engine and camera capture
 - Reading analytics and engagement storage
 - Recommendation engine
-- Business API routes beyond health checks
 
 NEXT RECOMMENDED PHASE:
-Browse/details APIs for CORTEX-6, then catalog UI. Authentication remains a later story.
+Frontend catalog browse/details UI for CORTEX-6. Authentication remains a later story.
 
 ==================================================
 20. KNOWN ISSUES
@@ -444,7 +457,7 @@ DATABASE OPERATIONS (operational guidance — not a current defect):
 ==================================================
 
 - User authentication and authorization
-- Book catalog browse/details APIs
+- Frontend catalog browse/details UI
 - Book library management
 - Token-based book issuing
 - In-app reading interface
