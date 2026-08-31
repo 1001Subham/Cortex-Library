@@ -7,6 +7,14 @@ export function catalogHash() {
   return '#/';
 }
 
+export function loginHash() {
+  return '#/login';
+}
+
+export function registerHash() {
+  return '#/register';
+}
+
 export function bookHash(id) {
   return `#/books/${id}`;
 }
@@ -20,6 +28,14 @@ export function parseLocationHash() {
 
   if (raw === '/status') {
     return { name: 'status' };
+  }
+
+  if (raw === '/login') {
+    return { name: 'login' };
+  }
+
+  if (raw === '/register') {
+    return { name: 'register' };
   }
 
   const readerMatch = raw.match(/^\/books\/([^/]+)\/read\/?$/);

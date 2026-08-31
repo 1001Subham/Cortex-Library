@@ -328,13 +328,14 @@ PROJECT_CONTEXT.md
 
 Last updated: 2026-08-31
 
-PHASE: Email/password JWT authentication implemented (catalog + reader remain public)
+PHASE: Frontend login/register UI on top of JWT auth (catalog + reader remain public)
 
 JIRA:
 - CORTEX-6 — US-01: Browse Digital Library (API and frontend catalog implemented)
 - CORTEX-10 — Design Digital Book Catalog Interface (schema implemented in PostgreSQL)
 - In-app reader — published HTML excerpts served from internal storage (no issuing/progress/attention yet)
 - Authentication — register, login, GET /api/auth/me, requireAuth middleware (no Google OAuth yet)
+- Frontend auth UI — hash routes `#/login` and `#/register`; session restore via GET /api/auth/me
 
 COMPLETED:
 - Root monorepo structure (frontend, backend, ml-service, database, docs)
@@ -372,6 +373,10 @@ ARCHITECTURE DECISIONS:
 - requireAuth middleware reads `Authorization: Bearer <token>` and attaches `req.user` (public fields only)
 - Catalog browse, book details, and HTML content routes stay public (no requireAuth)
 - Password hashes, plaintext passwords, and JWT secrets are never returned in API bodies or logged
+- Frontend JWT is stored in localStorage key `cortex.library.accessToken` (documented in `frontend/src/auth/tokenStorage.js`); the token is not kept in React state
+- AuthProvider restores the session on startup with GET /api/auth/me and clears the token on 401
+- Catalog, book details, and content API calls from the frontend do not send the Authorization header
+- Hash routes `#/login` and `#/register` are public; they do not gate the catalog or reader
 
 DATABASE CONNECTION (confirmed 2026-08-29):
 - Backend connects to PostgreSQL using discrete env vars: POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
@@ -464,6 +469,14 @@ AUTHENTICATION API (2026-08-31):
 - password_hash is never included in responses
 - Tests: backend `npm test` (node:test, src/books.api.test.js then src/auth.api.test.js) against PostgreSQL inside Docker
 
+FRONTEND AUTH UI (2026-08-31):
+- Hash routes: `#/login`, `#/register` (plus existing catalog, details, reader, status)
+- Site nav: Log in / Register when signed out; email + Log out when signed in
+- AuthProvider (`frontend/src/context/AuthContext.jsx`) owns session: register, login, logout, restore
+- Forms validate email and password length before calling the API; loading, error, and success banners
+- Duplicate email (409) and invalid credentials (401) surface the API error message
+- Passwords use `type=password` and are not stored; JWT is never rendered or logged
+
 BOOK CONTENT STRATEGY:
 - Users read inside Cortex Library (React reader); backend serves stored files
 - Do not redirect to external sites, require PDF download, or store external reading URLs
@@ -477,7 +490,7 @@ NOT YET IMPLEMENTED:
 - Attention engine and camera capture
 - Reading analytics and engagement storage
 - Recommendation engine
-- Frontend login/register UI
+- Protecting the reader behind login (intentionally public for now)
 
 NEXT RECOMMENDED PHASE:
 Book issuing (authenticated), then reading progress. Catalog browse and in-library HTML reading remain available without login. Google OAuth is deferred.

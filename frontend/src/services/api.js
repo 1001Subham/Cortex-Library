@@ -1,12 +1,31 @@
+import { getStoredToken } from '../auth/tokenStorage';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
+function authorizationHeader(skipAuth) {
+  if (skipAuth) {
+    return {};
+  }
+
+  const token = getStoredToken();
+
+  if (!token) {
+    return {};
+  }
+
+  return { Authorization: `Bearer ${token}` };
+}
+
 async function request(path, options = {}) {
+  const { skipAuth = false, headers: extraHeaders, ...fetchOptions } = options;
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...fetchOptions,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...authorizationHeader(skipAuth),
+      ...extraHeaders,
     },
-    ...options,
   });
 
   if (!response.ok) {
@@ -30,7 +49,7 @@ async function request(path, options = {}) {
 }
 
 export async function getBackendHealth() {
-  return request('/api/health');
+  return request('/api/health', { skipAuth: true });
 }
 
 export async function listBooks({ page, limit, q, category, sort } = {}) {
@@ -53,11 +72,11 @@ export async function listBooks({ page, limit, q, category, sort } = {}) {
   }
 
   const query = params.toString();
-  return request(`/api/books${query ? `?${query}` : ''}`);
+  return request(`/api/books${query ? `?${query}` : ''}`, { skipAuth: true });
 }
 
 export async function getBook(id) {
-  return request(`/api/books/${id}`);
+  return request(`/api/books/${id}`, { skipAuth: true });
 }
 
 export async function getBookContent(id) {
@@ -81,6 +100,26 @@ export async function getBookContent(id) {
   }
 
   return response.text();
+}
+
+export async function registerAccount({ email, password }) {
+  return request('/api/auth/register', {
+    method: 'POST',
+    skipAuth: true,
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function loginAccount({ email, password }) {
+  return request('/api/auth/login', {
+    method: 'POST',
+    skipAuth: true,
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function getMe() {
+  return request('/api/auth/me');
 }
 
 export { API_BASE_URL };

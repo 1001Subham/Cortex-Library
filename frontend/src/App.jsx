@@ -1,28 +1,34 @@
 import BookDetailsPage from './pages/BookDetailsPage';
 import CatalogPage from './pages/CatalogPage';
 import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
 import ReaderPage from './pages/ReaderPage';
-import { catalogHash, useHashRoute } from './hooks/useHashRoute';
+import RegisterPage from './pages/RegisterPage';
+import SiteNav from './components/SiteNav';
+import { AuthProvider } from './context/AuthContext';
+import { useHashRoute } from './hooks/useHashRoute';
 
-function App() {
+function AppRoutes() {
   const route = useHashRoute();
 
   return (
     <div className="app">
-      <nav className="site-nav">
-        <a className="site-nav__brand" href={catalogHash()}>
-          Cortex Library
-        </a>
-        <div className="site-nav__links">
-          <a href={catalogHash()}>Catalog</a>
-          <a href="#/status">System status</a>
-        </div>
-      </nav>
+      <SiteNav />
       {route.name === 'reader' && <ReaderPage bookId={route.id} />}
       {route.name === 'detail' && <BookDetailsPage bookId={route.id} />}
       {route.name === 'status' && <HomePage />}
+      {route.name === 'login' && <LoginPage />}
+      {route.name === 'register' && <RegisterPage />}
       {route.name === 'catalog' && <CatalogPage />}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }
 
