@@ -1,6 +1,16 @@
 import { asyncHandler } from '../middleware/httpError.js';
-import { loginUser, registerUser } from '../services/auth.service.js';
-import { parseLoginBody, parseRegisterBody } from '../validators/auth.validator.js';
+import {
+  loginUser,
+  loginWithGoogle,
+  registerUser,
+  updateAuthenticatedProfile,
+} from '../services/auth.service.js';
+import {
+  parseGoogleBody,
+  parseLoginBody,
+  parseProfileBody,
+  parseRegisterBody,
+} from '../validators/auth.validator.js';
 
 export const registerHandler = asyncHandler(async (req, res) => {
   const parsed = parseRegisterBody(req.body);
@@ -30,6 +40,36 @@ export const loginHandler = asyncHandler(async (req, res) => {
   res.status(200).json(result);
 });
 
+export const googleHandler = asyncHandler(async (req, res) => {
+  const parsed = parseGoogleBody(req.body);
+
+  if (parsed.error) {
+    return res.status(400).json({
+      status: 'error',
+      message: parsed.error,
+    });
+  }
+
+  const result = await loginWithGoogle(parsed.value);
+  res.status(200).json(result);
+});
+
 export const meHandler = asyncHandler(async (req, res) => {
   res.status(200).json({ user: req.user });
+});
+
+export const getProfileHandler = meHandler;
+
+export const updateProfileHandler = asyncHandler(async (req, res) => {
+  const parsed = parseProfileBody(req.body);
+
+  if (parsed.error) {
+    return res.status(400).json({
+      status: 'error',
+      message: parsed.error,
+    });
+  }
+
+  const user = await updateAuthenticatedProfile(req.user.id, parsed.value);
+  res.status(200).json({ user });
 });

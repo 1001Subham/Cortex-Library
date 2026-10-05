@@ -24,6 +24,8 @@ services:
     restart: unless-stopped
     ports:
       - "${BACKEND_PORT:-3000}:3000"
+    env_file:
+      - .env
     environment:
       PORT: 3000
       NODE_ENV: ${NODE_ENV:-development}
@@ -37,6 +39,11 @@ services:
       BOOK_STORAGE_ROOT: /storage
       JWT_SECRET: ${JWT_SECRET:-change_me_jwt_secret_in_local_env}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      INITIAL_TOKEN_BALANCE: ${INITIAL_TOKEN_BALANCE:-10}
+      BOOK_ISSUE_TOKEN_COST: ${BOOK_ISSUE_TOKEN_COST:-2}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -70,17 +77,20 @@ services:
       start_period: 10s
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-${GOOGLE_CLIENT_ID:-}}
     container_name: cortex-frontend
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT:-5173}:5173"
     environment:
       VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+      VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-${GOOGLE_CLIENT_ID:-}}
       BOOK_STORAGE_ROOT: /storage
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
       - ./storage:/storage:ro
     depends_on:
       backend:

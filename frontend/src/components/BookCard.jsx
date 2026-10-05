@@ -1,5 +1,5 @@
 import BookCover from './BookCover';
-import { bookHash, readerHash } from '../hooks/useHashRoute';
+import { bookHash } from '../hooks/useHashRoute';
 
 function authorsOf(book) {
   return book.authors?.map((author) => author.displayName).join(', ');
@@ -7,7 +7,6 @@ function authorsOf(book) {
 
 function BookCard({ book, compact = false }) {
   const authors = authorsOf(book);
-  const canRead = Boolean(book.contentAvailable);
 
   return (
     <article className={`book-card${compact ? ' book-card--compact' : ''}`}>
@@ -27,14 +26,9 @@ function BookCard({ book, compact = false }) {
           </ul>
         )}
         <div className="book-card__actions">
-          <a className="button button--ghost button--small" href={bookHash(book.id)}>
+          <a className="button button--primary button--small" href={bookHash(book.id)}>
             View details
           </a>
-          {canRead ? (
-            <a className="button button--primary button--small" href={readerHash(book.id)}>
-              Read
-            </a>
-          ) : null}
         </div>
       </div>
     </article>

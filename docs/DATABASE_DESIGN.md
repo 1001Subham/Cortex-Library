@@ -2,9 +2,9 @@
 
 **Jira:** CORTEX-6 (US-01: Browse Digital Library) / CORTEX-10 (Design Digital Book Catalog Interface)
 
-**Status:** Catalog schema migrated. Users table migrated for email/password JWT auth. Development seed data applied (10 public-domain excerpts). Catalog browse APIs implemented (`GET /api/books`, `GET /api/books/:id`). Content serving: `GET /api/books/:id/content`. Catalog UI and in-app HTML reader implemented. Auth APIs: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`.
+**Status:** Catalog schema migrated. Users support email/password and Google OAuth (`google_sub`, nullable `password_hash`) plus an optional `display_name` for the reader profile. Book issues, token wallets, token ledger, reading progress, and reading sessions migrated. Development seed data applied (10 complete US public-domain works as HTML). Catalog, content, auth, issuing, library, token, reader analytics, profile, reading-progress, reading-session, and personalized recommendations APIs implemented. Recommendations are computed from the current authenticated reader's existing history; there is no recommendation table or attention storage.
 
-**Scope:** Catalog metadata, internal content references, and the minimal `users` table for authentication. Issues, sessions, attention, and recommendations remain out of scope.
+**Scope:** Catalog metadata, internal content references, authenticated users, book issues, token wallets/ledger, saved HTML scroll progress, measured active reading sessions, and deterministic content-based recommendations. Attention, XP/levels, and premium pricing remain out of scope.
 
 ---
 
@@ -17,9 +17,14 @@
 | `books` | Catalog record, cover reference, and internal content reference. |
 | `book_authors` | Many-to-many: books ↔ authors, with credit order. |
 | `book_categories` | Many-to-many: books ↔ categories. **No** `books.primary_category_id`. |
-| `users` | Authenticated accounts (email + password hash). No profile fields yet. |
+| `users` | Authenticated accounts (email/password and/or Google) with optional `display_name`. |
+| `book_issues` | Authenticated loans of published books (active / returned / expired). |
+| `user_token_wallets` | One token balance per user. |
+| `token_transactions` | Ledger of token credits and debits (welcome, issues, future rewards). |
+| `reading_progress` | One saved HTML scroll position per user and book (0–100%). |
+| `reading_sessions` | Measured active reading time per user and book (open or closed intervals). |
 
-Not created in this phase: `book_issues`, `reading_sessions`, `reading_progress`, `attention_measurements`, `recommendations`.
+Not created in this phase: `attention_measurements`, `recommendations`, XP/level tables.
 
 ---
 
@@ -108,12 +113,82 @@ Composite PK `(book_id, category_id)`.
 | Column | Type | Notes |
 |--------|------|--------|
 | `id` | UUID | Default `gen_random_uuid()` |
-| `email` | VARCHAR(254) | Unique; stored lowercased and trimmed |
-| `password_hash` | VARCHAR(255) | bcrypt hash only; never plaintext; never returned by APIs |
+| `email` | VARCHAR(254) | Unique; stored lowercased and trimmed; not editable from the reader profile |
+| `password_hash` | VARCHAR(255) NULL | bcrypt hash for email/password accounts; NULL for Google-only accounts; never plaintext; never returned by APIs |
+| `google_sub` | VARCHAR(255) NULL | Google subject from a verified ID token; unique when present; never returned by APIs |
+| `display_name` | VARCHAR(120) NULL | Optional reader profile name; trimmed; empty string is not stored |
 | `created_at` | TIMESTAMPTZ NOT NULL | Default `now()` |
 | `updated_at` | TIMESTAMPTZ NOT NULL | Default `now()` |
 
-**Not added:** display name, roles, OAuth provider ids, or email-verified flags. Google OAuth can add nullable columns later without rewriting this table.
+**Auth methods:** at least one of `password_hash` or `google_sub` must be present. An existing email/password user can be linked to Google when the verified Google email matches. Profile editing updates `display_name` only; identity always comes from `users.id` on the authenticated JWT.
+
+### `book_issues`
+
+| Column | Type | Notes |
+|--------|------|--------|
+| `id` | UUID | Default `gen_random_uuid()` |
+| `user_id` | UUID NOT NULL | FK → users |
+| `book_id` | UUID NOT NULL | FK → books |
+| `issued_at` | TIMESTAMPTZ NOT NULL | Default `now()` |
+| `due_at` | TIMESTAMPTZ NOT NULL | After `issued_at` (application default 14 days) |
+| `returned_at` | TIMESTAMPTZ NULL | Set when status is `returned` |
+| `status` | VARCHAR(20) NOT NULL | `active`, `returned`, `expired` |
+| `created_at` | TIMESTAMPTZ NOT NULL | |
+| `updated_at` | TIMESTAMPTZ NOT NULL | |
+
+Partial unique index: one **active** issue per `(user_id, book_id)`.
+
+### `reading_progress`
+
+| Column | Type | Notes |
+|--------|------|--------|
+| `id` | UUID | Default `gen_random_uuid()` |
+| `user_id` | UUID NOT NULL | FK → users |
+| `book_id` | UUID NOT NULL | FK → books |
+| `progress_percent` | NUMERIC(5,2) NOT NULL | HTML scroll position 0–100; not a page number |
+| `created_at` | TIMESTAMPTZ NOT NULL | |
+| `updated_at` | TIMESTAMPTZ NOT NULL | |
+
+Unique `(user_id, book_id)`. GET/PUT require an active `book_issues` row for that pair. The row may remain after return so a later re-issue can resume; the progress API still returns 403 while there is no active issue. This is not attention, engagement, or reading time.
+
+### `reading_sessions`
+
+| Column | Type | Notes |
+|--------|------|--------|
+| `id` | UUID | Default `gen_random_uuid()` |
+| `user_id` | UUID NOT NULL | FK → users |
+| `book_id` | UUID NOT NULL | FK → books |
+| `started_at` | TIMESTAMPTZ NOT NULL | Default `now()` |
+| `ended_at` | TIMESTAMPTZ NULL | NULL while the session is open |
+| `duration_seconds` | INTEGER NOT NULL | Accumulated visible reading time; CHECK `>= 0` |
+| `created_at` | TIMESTAMPTZ NOT NULL | |
+| `updated_at` | TIMESTAMPTZ NOT NULL | |
+
+Partial unique index: at most one open session (`ended_at IS NULL`) per `(user_id, book_id)`. Duration is client-reported elapsed active seconds, capped at 60 per request, added only to the open row. Duplicate stop does not add time to an already-closed session. This is not catalog `estimated_reading_minutes` and is not attention.
+
+### `user_token_wallets`
+
+| Column | Type | Notes |
+|--------|------|--------|
+| `id` | UUID | Default `gen_random_uuid()` |
+| `user_id` | UUID NOT NULL | Unique; one wallet per user |
+| `balance` | INTEGER NOT NULL | Default 0; CHECK `>= 0` |
+| `created_at` | TIMESTAMPTZ NOT NULL | |
+| `updated_at` | TIMESTAMPTZ NOT NULL | |
+
+### `token_transactions`
+
+| Column | Type | Notes |
+|--------|------|--------|
+| `id` | UUID | Default `gen_random_uuid()` |
+| `user_id` | UUID NOT NULL | FK → users |
+| `amount` | INTEGER NOT NULL | Non-zero; positive credits, negative spends |
+| `transaction_type` | VARCHAR(40) NOT NULL | `welcome_bonus`, `book_issue`, `admin_grant`, `level_reward` |
+| `description` | TEXT NULL | Human-readable ledger note |
+| `reference_id` | UUID NULL | e.g. `book_issues.id` for spends |
+| `created_at` | TIMESTAMPTZ NOT NULL | |
+
+Partial unique index: at most one `welcome_bonus` per user. `level_reward` is reserved; XP/levels are not implemented. Returns do **not** insert a refund row in this phase.
 
 ---
 
@@ -123,13 +198,18 @@ Composite PK `(book_id, category_id)`.
 categories.parent_id ──► categories.id          (optional tree)
 books ◄──► authors     via book_authors        (M:N)
 books ◄──► categories  via book_categories     (M:N)
-users                                 (independent; no catalog FKs yet)
+users ──► book_issues ──► books
+users ──► user_token_wallets   (1:1)
+users ──► token_transactions   (1:N)
+users ──► reading_progress ──► books  (1 per user+book)
+users ──► reading_sessions ──► books  (N per user+book; one open)
 ```
 
 - One book, many authors; one author, many books.
 - One book, many categories (including a parent and a child if desired); one category, many books.
 - A category may have one parent; cycles must be prevented in application logic (CHECK cannot easily forbid all cycles).
-- Users are not linked to books yet. Future `book_issues` / `reading_progress` will reference `users.id` and `books.id`.
+- One user, many issues; one published book may be issued to many users.
+- One user, one wallet; many ledger rows. Token spend and issue insert happen in one database transaction.
 
 ---
 
@@ -143,6 +223,11 @@ users                                 (independent; no catalog FKs yet)
 | `book_authors` | `(book_id, author_id)` |
 | `book_categories` | `(book_id, category_id)` |
 | `users` | `id` (UUID) |
+| `book_issues` | `id` (UUID) |
+| `user_token_wallets` | `id` (UUID) |
+| `token_transactions` | `id` (UUID) |
+| `reading_progress` | `id` (UUID) |
+| `reading_sessions` | `id` (UUID) |
 
 ---
 
@@ -155,6 +240,14 @@ users                                 (independent; no catalog FKs yet)
 | `book_authors` | `author_id` | `authors(id)` | `ON DELETE RESTRICT` (do not drop authors still credited) |
 | `book_categories` | `book_id` | `books(id)` | `ON DELETE CASCADE` |
 | `book_categories` | `category_id` | `categories(id)` | `ON DELETE RESTRICT` |
+| `book_issues` | `user_id` | `users(id)` | `ON DELETE CASCADE` |
+| `book_issues` | `book_id` | `books(id)` | `ON DELETE RESTRICT` |
+| `user_token_wallets` | `user_id` | `users(id)` | `ON DELETE CASCADE` |
+| `token_transactions` | `user_id` | `users(id)` | `ON DELETE CASCADE` |
+| `reading_progress` | `user_id` | `users(id)` | `ON DELETE CASCADE` |
+| `reading_progress` | `book_id` | `books(id)` | `ON DELETE RESTRICT` |
+| `reading_sessions` | `user_id` | `users(id)` | `ON DELETE CASCADE` |
+| `reading_sessions` | `book_id` | `books(id)` | `ON DELETE RESTRICT` |
 
 ---
 
@@ -167,6 +260,12 @@ users                                 (independent; no catalog FKs yet)
 - `books.slug`
 - `books.isbn` UNIQUE where `isbn IS NOT NULL`
 - `users.email`
+- `users.google_sub` UNIQUE where `google_sub IS NOT NULL`
+- `reading_progress(user_id, book_id)`
+- partial unique `reading_sessions(user_id, book_id)` WHERE `ended_at IS NULL`
+- `user_token_wallets.user_id`
+- partial unique `book_issues(user_id, book_id)` WHERE `status = 'active'`
+- partial unique `token_transactions(user_id)` WHERE `transaction_type = 'welcome_bonus'`
 
 **Checks**
 
@@ -180,9 +279,19 @@ users                                 (independent; no catalog FKs yet)
 - `book_authors.author_order` `>= 1`
 - `categories`: `parent_id IS DISTINCT FROM id` (no self-parent)
 - `users.email` equals `lower(trim(email))` and is non-empty
-- `users.password_hash` is non-empty
+- `users.display_name` is NULL or trimmed and non-empty
+- `users.password_hash` is NULL or non-empty
+- `users.google_sub` is NULL or non-empty
+- `users`: `password_hash IS NOT NULL OR google_sub IS NOT NULL`
+- `reading_progress.progress_percent` between 0 and 100
+- `reading_sessions.duration_seconds >= 0`
+- `reading_sessions.ended_at` NULL or `>= started_at`
+- `book_issues.status` IN (`active`, `returned`, `expired`)
+- `book_issues.due_at > issued_at`
+- `user_token_wallets.balance >= 0`
+- `token_transactions.amount <> 0` and sign matches type (credits positive, `book_issue` negative)
 
-**Not-null:** titles, slugs, status, language_code, user email/password_hash, timestamps as listed above.
+**Not-null:** titles, slugs, status, language_code, user email, timestamps as listed above. `password_hash` is required only for email/password-only accounts.
 
 **UUID generation:** PostgreSQL 16 provides `gen_random_uuid()` in core. `pgcrypto` is **not required** for this catalog. Do **not** enable `pg_trgm` in the first migration.
 
@@ -197,6 +306,8 @@ users                                 (independent; no catalog FKs yet)
 - `books(slug)`
 - partial unique `books(isbn)` WHERE `isbn IS NOT NULL`
 - `users(email)`
+- partial unique `users(google_sub)` WHERE `google_sub IS NOT NULL`
+- `user_token_wallets(user_id)`
 
 **Foreign keys / filters**
 
@@ -208,6 +319,14 @@ users                                 (independent; no catalog FKs yet)
 
 - `books(status, published_at DESC)` WHERE `status = 'published'`
 - `books(language_code)` for language filter
+- `book_issues(user_id, issued_at DESC)`
+- `book_issues(book_id)`
+- `token_transactions(user_id, created_at DESC)`
+- `token_transactions(transaction_type)`
+- `reading_progress(book_id)`
+- `reading_progress(user_id, updated_at DESC)`
+- `reading_sessions(book_id)`
+- `reading_sessions(user_id, started_at DESC)`
 
 **Not in first migration**
 
@@ -240,7 +359,7 @@ users                                 (independent; no catalog FKs yet)
 - **Categories vs genres:** one hierarchy via `parent_id`. Avoids duplicate Fiction/Mystery taxonomies.
 - **M:N categories:** a title can be Mystery and Historical; recommendations can use multiple tags later.
 - **Publisher as VARCHAR:** a `publishers` table is not needed for CORTEX-6.
-- **Users are independent of catalog:** issuing and progress stay future tables with FKs to `users.id` and `books.id`.
+- **Users own issues and wallets:** `book_issues` and token tables reference `users.id`; catalog tables stay independent of auth.
 
 ---
 
@@ -249,12 +368,15 @@ users                                 (independent; no catalog FKs yet)
 | Future feature | How this schema supports it |
 |----------------|------------------------------|
 | In-app reader | `content_storage_key`, `content_format`, `total_pages` |
-| Resume / progress | New table `reading_progress(user_id, book_id, position, …)` |
-| Book issues / tokens | New table referencing `users.id` and `books.id` |
+| Resume / progress | `reading_progress(user_id, book_id, progress_percent)` — HTML scroll percent |
+| Measured reading time | `reading_sessions` duration accumulated from visible reader time |
+| Book issues / tokens | `book_issues`, `user_token_wallets`, `token_transactions` |
+| XP / level rewards | Reuse `token_transactions.transaction_type = 'level_reward'` |
+| Premium issue cost | Application config / later book flags; wallet schema unchanged |
 | Recommendations | Join `book_categories` + future reading history |
 | Search | Add `pg_trgm` later without changing entity list |
 | EPUB | Same files + `content_format`; parser later |
-| Auth | `users` table; JWT in the API; Google OAuth later |
+| Auth | `users` email/password + `google_sub`; Cortex JWT |
 
 ---
 
@@ -269,6 +391,12 @@ Applied to local Docker PostgreSQL (forward-only CREATE):
 5. `005_create_book_authors.sql`
 6. `006_create_book_categories.sql`
 7. `007_create_users.sql`
+8. `008_create_book_issues.sql`
+9. `009_create_token_wallets.sql`
+10. `010_add_google_oauth.sql`
+11. `011_add_user_display_name.sql`
+12. `012_create_reading_progress.sql`
+13. `013_create_reading_sessions.sql`
 
 Development seed (idempotent): `database/seeds/001_catalog_seed.sql`
 
@@ -276,4 +404,4 @@ Development seed (idempotent): `database/seeds/001_catalog_seed.sql`
 
 ## Implementation note
 
-Catalog tables exist and contain development seed data (10 published books, HTML excerpts). Browse APIs: `GET /api/books` and `GET /api/books/:id`. Content API: `GET /api/books/:id/content` (key-constrained HTML files only). Catalog UI and in-app HTML reader are implemented (public, no login). `users` exists for email/password registration and JWT login; catalog and reader routes stay unauthenticated.
+Catalog tables exist and contain development seed data (10 published books with complete public-domain HTML). Browse APIs: `GET /api/books` and `GET /api/books/:id` (public). Content API: `GET /api/books/:id/content` requires a Cortex JWT and an active issue for that book. Catalog UI is public; in-app HTML reader is gated. `users` supports email/password, Google OAuth, and optional `display_name`. Authenticated issuing charges tokens atomically; My Library lists and returns issues without refunding tokens. `GET /api/analytics` aggregates the authenticated user's issues, `reading_progress`, measured `reading_sessions` time, and token spends; it does not read attention tables because those tables do not exist. Reader profile uses `GET /api/auth/me`, `GET /api/auth/profile`, and `PUT /api/auth/profile`. Reading progress uses `GET /api/books/:id/progress` and `PUT /api/books/:id/progress` (`reading_progress.progress_percent`). Reading time uses `POST /api/books/:id/reading-sessions/start|heartbeat|stop`.

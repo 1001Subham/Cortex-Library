@@ -6,6 +6,16 @@ dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+function parseNonNegativeInt(value, fallback) {
+  const parsed = parseInt(value ?? '', 10);
+
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
 const config = {
   port: parseInt(process.env.PORT || process.env.BACKEND_PORT || '3000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -17,6 +27,15 @@ const config = {
   jwt: {
     secret: process.env.JWT_SECRET || '',
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  },
+  tokens: {
+    initialBalance: parseNonNegativeInt(process.env.INITIAL_TOKEN_BALANCE, 10),
+    bookIssueCost: parseNonNegativeInt(process.env.BOOK_ISSUE_TOKEN_COST, 2),
+  },
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID || '',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+    redirectUri: process.env.GOOGLE_REDIRECT_URI || '',
   },
   database: {
     host: process.env.POSTGRES_HOST || 'localhost',

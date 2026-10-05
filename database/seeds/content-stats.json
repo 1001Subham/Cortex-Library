@@ -1,0 +1,112 @@
+[
+  {
+    "id": "b3000000-0000-4000-8000-000000000001",
+    "title": "Alice's Adventures in Wonderland",
+    "gutenbergId": 11,
+    "sections": 12,
+    "wordCount": 26311,
+    "htmlBytes": 160359,
+    "totalPages": 105,
+    "estimatedReadingMinutes": 120,
+    "firstHeading": "CHAPTER I. Down the Rabbit-Hole"
+  },
+  {
+    "id": "b3000000-0000-4000-8000-000000000002",
+    "title": "The Adventures of Sherlock Holmes",
+    "gutenbergId": 1661,
+    "sections": 15,
+    "wordCount": 104347,
+    "htmlBytes": 606473,
+    "totalPages": 417,
+    "estimatedReadingMinutes": 474,
+    "firstHeading": "I. A SCANDAL IN BOHEMIA"
+  },
+  {
+    "id": "b3000000-0000-4000-8000-000000000003",
+    "title": "The Time Machine",
+    "gutenbergId": 35,
+    "sections": 17,
+    "wordCount": 32310,
+    "htmlBytes": 185892,
+    "totalPages": 129,
+    "estimatedReadingMinutes": 147,
+    "firstHeading": "I. Introduction"
+  },
+  {
+    "id": "b3000000-0000-4000-8000-000000000004",
+    "title": "Treasure Island",
+    "gutenbergId": 120,
+    "sections": 40,
+    "wordCount": 67655,
+    "htmlBytes": 386816,
+    "totalPages": 271,
+    "estimatedReadingMinutes": 308,
+    "firstHeading": "PART ONE--The Old Buccaneer"
+  },
+  {
+    "id": "b3000000-0000-4000-8000-000000000005",
+    "title": "Pride and Prejudice",
+    "gutenbergId": 1342,
+    "sections": 61,
+    "wordCount": 121897,
+    "htmlBytes": 725235,
+    "totalPages": 488,
+    "estimatedReadingMinutes": 554,
+    "firstHeading": "Chapter I."
+  },
+  {
+    "id": "b3000000-0000-4000-8000-000000000006",
+    "title": "The Wonderful Wizard of Oz",
+    "gutenbergId": 55,
+    "sections": 25,
+    "wordCount": 39292,
+    "htmlBytes": 226382,
+    "totalPages": 157,
+    "estimatedReadingMinutes": 179,
+    "firstHeading": "Introduction"
+  },
+  {
+    "id": "b3000000-0000-4000-8000-000000000007",
+    "title": "Dracula",
+    "gutenbergId": 345,
+    "sections": 27,
+    "wordCount": 160366,
+    "htmlBytes": 872543,
+    "totalPages": 641,
+    "estimatedReadingMinutes": 729,
+    "firstHeading": "CHAPTER I"
+  },
+  {
+    "id": "b3000000-0000-4000-8000-000000000008",
+    "title": "Frankenstein",
+    "gutenbergId": 84,
+    "sections": 28,
+    "wordCount": 74919,
+    "htmlBytes": 431809,
+    "totalPages": 300,
+    "estimatedReadingMinutes": 341,
+    "firstHeading": "Letter 1"
+  },
+  {
+    "id": "b3000000-0000-4000-8000-000000000009",
+    "title": "A Christmas Carol",
+    "gutenbergId": 46,
+    "sections": 6,
+    "wordCount": 28459,
+    "htmlBytes": 174260,
+    "totalPages": 114,
+    "estimatedReadingMinutes": 129,
+    "firstHeading": "PREFACE"
+  },
+  {
+    "id": "b3000000-0000-4000-8000-00000000000a",
+    "title": "The War of the Worlds",
+    "gutenbergId": 36,
+    "sections": 29,
+    "wordCount": 59738,
+    "htmlBytes": 351696,
+    "totalPages": 239,
+    "estimatedReadingMinutes": 272,
+    "firstHeading": "BOOK ONE THE COMING OF THE MARTIANS"
+  }
+]

@@ -3,11 +3,17 @@ import jwt from 'jsonwebtoken';
 import config from '../config/index.js';
 import { HttpError } from '../middleware/httpError.js';
 import {
+  createGoogleUser,
   createUser,
   findUserByEmail,
+  findUserByGoogleSub,
   findUserById,
+  linkGoogleSub,
   toPublicUser,
+  updateUserDisplayName,
 } from '../repositories/users.repository.js';
+import { verifyGoogleIdentity } from './googleAuth.service.js';
+import { ensureWelcomeWallet } from './tokens.service.js';
 
 const BCRYPT_ROUNDS = 10;
 const AUTH_FAILED = 'Invalid email or password.';
@@ -44,6 +50,15 @@ export function verifyAccessToken(token) {
   }
 }
 
+function sessionFor(row) {
+  const user = toPublicUser(row);
+
+  return {
+    user,
+    token: signAccessToken(user),
+  };
+}
+
 export async function registerUser({ email, password }) {
   const existing = await findUserByEmail(email);
 
@@ -53,18 +68,15 @@ export async function registerUser({ email, password }) {
 
   const passwordHash = await hashPassword(password);
   const row = await createUser({ email, passwordHash });
-  const user = toPublicUser(row);
+  await ensureWelcomeWallet(row.id);
 
-  return {
-    user,
-    token: signAccessToken(user),
-  };
+  return sessionFor(row);
 }
 
 export async function loginUser({ email, password }) {
   const row = await findUserByEmail(email);
 
-  if (!row) {
+  if (!row || !row.password_hash) {
     throw new HttpError(401, AUTH_FAILED);
   }
 
@@ -74,16 +86,57 @@ export async function loginUser({ email, password }) {
     throw new HttpError(401, AUTH_FAILED);
   }
 
-  const user = toPublicUser(row);
+  return sessionFor(row);
+}
 
-  return {
-    user,
-    token: signAccessToken(user),
-  };
+export async function loginWithGoogle({ credential }) {
+  const identity = await verifyGoogleIdentity(credential);
+  let row = await findUserByGoogleSub(identity.sub);
+
+  if (!row) {
+    const byEmail = await findUserByEmail(identity.email);
+
+    if (byEmail) {
+      row = (await linkGoogleSub(byEmail.id, identity.sub)) || byEmail;
+    } else {
+      try {
+        row = await createGoogleUser({
+          email: identity.email,
+          googleSub: identity.sub,
+          displayName: identity.displayName,
+        });
+      } catch (error) {
+        if (error.statusCode === 409) {
+          row = await findUserByEmail(identity.email);
+
+          if (!row) {
+            throw error;
+          }
+
+          row = (await linkGoogleSub(row.id, identity.sub)) || row;
+        } else {
+          throw error;
+        }
+      }
+    }
+  }
+
+  await ensureWelcomeWallet(row.id);
+  return sessionFor(row);
 }
 
 export async function getAuthenticatedUser(id) {
   const row = await findUserById(id);
+
+  if (!row) {
+    throw new HttpError(401, 'Invalid or expired token.');
+  }
+
+  return toPublicUser(row);
+}
+
+export async function updateAuthenticatedProfile(userId, { displayName }) {
+  const row = await updateUserDisplayName(userId, displayName);
 
   if (!row) {
     throw new HttpError(401, 'Invalid or expired token.');

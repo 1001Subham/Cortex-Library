@@ -1,5 +1,5 @@
 import BookCover from './BookCover';
-import { bookHash, readerHash } from '../hooks/useHashRoute';
+import { bookHash } from '../hooks/useHashRoute';
 
 function FeaturedHero({ book }) {
   if (!book) {
@@ -7,7 +7,6 @@ function FeaturedHero({ book }) {
   }
 
   const authors = book.authors?.map((author) => author.displayName).join(', ');
-  const canRead = Boolean(book.contentAvailable);
 
   return (
     <section className="hero">
@@ -17,12 +16,7 @@ function FeaturedHero({ book }) {
         {authors && <p className="hero__authors">{authors}</p>}
         {book.description && <p className="lede">{book.description}</p>}
         <div className="hero__actions">
-          {canRead ? (
-            <a className="button button--primary" href={readerHash(book.id)}>
-              Read
-            </a>
-          ) : null}
-          <a className="button button--ghost" href={bookHash(book.id)}>
+          <a className="button button--primary" href={bookHash(book.id)}>
             View details
           </a>
         </div>

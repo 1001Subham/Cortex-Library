@@ -12,40 +12,47 @@ const CONTENT_TYPES = {
   webp: 'image/webp',
 };
 
+function coverMiddleware(storageRoot) {
+  return (req, res, next) => {
+    const urlPath = (req.url || '').split('?')[0];
+    const match = urlPath.match(COVER_URL);
+
+    if (!match) {
+      next();
+      return;
+    }
+
+    const bookId = match[1].toLowerCase();
+    const extension = match[2].toLowerCase();
+    const booksRoot = path.resolve(storageRoot, 'books');
+    const filePath = path.resolve(booksRoot, bookId, `cover.${extension}`);
+
+    if (!filePath.startsWith(`${booksRoot}${path.sep}`)) {
+      res.statusCode = 403;
+      res.end();
+      return;
+    }
+
+    if (!fs.existsSync(filePath)) {
+      res.statusCode = 404;
+      res.end();
+      return;
+    }
+
+    res.setHeader('Content-Type', CONTENT_TYPES[extension] || 'application/octet-stream');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    fs.createReadStream(filePath).pipe(res);
+  };
+}
+
 export function serveBookCovers(storageRoot) {
   return {
     name: 'serve-book-covers',
     configureServer(server) {
-      server.middlewares.use((req, res, next) => {
-        const urlPath = (req.url || '').split('?')[0];
-        const match = urlPath.match(COVER_URL);
-
-        if (!match) {
-          next();
-          return;
-        }
-
-        const bookId = match[1].toLowerCase();
-        const extension = match[2].toLowerCase();
-        const booksRoot = path.resolve(storageRoot, 'books');
-        const filePath = path.resolve(booksRoot, bookId, `cover.${extension}`);
-
-        if (!filePath.startsWith(`${booksRoot}${path.sep}`)) {
-          res.statusCode = 403;
-          res.end();
-          return;
-        }
-
-        if (!fs.existsSync(filePath)) {
-          res.statusCode = 404;
-          res.end();
-          return;
-        }
-
-        res.setHeader('Content-Type', CONTENT_TYPES[extension] || 'application/octet-stream');
-        res.setHeader('Cache-Control', 'public, max-age=3600');
-        fs.createReadStream(filePath).pipe(res);
-      });
+      server.middlewares.use(coverMiddleware(storageRoot));
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(coverMiddleware(storageRoot));
     },
   };
 }

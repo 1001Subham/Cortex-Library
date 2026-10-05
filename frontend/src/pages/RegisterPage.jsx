@@ -38,7 +38,7 @@ function RegisterPage() {
     <AuthForm
       mode="register"
       title="Create an account"
-      lede="Register with an email address and a password of at least 8 characters."
+      lede="Register with an email address and a password of at least 8 characters, or continue with Google."
       submitLabel="Register"
       footer={
         <>

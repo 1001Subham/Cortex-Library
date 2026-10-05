@@ -326,16 +326,22 @@ PROJECT_CONTEXT.md
 19. CURRENT DEVELOPMENT STATUS
 ==================================================
 
-Last updated: 2026-08-31
+Last updated: 2026-10-05
 
-PHASE: Frontend login/register UI on top of JWT auth (catalog + reader remain public)
+PHASE: Personalized book recommendations (CORTEX-22)
 
 JIRA:
 - CORTEX-6 — US-01: Browse Digital Library (API and frontend catalog implemented)
 - CORTEX-10 — Design Digital Book Catalog Interface (schema implemented in PostgreSQL)
-- In-app reader — published HTML excerpts served from internal storage (no issuing/progress/attention yet)
-- Authentication — register, login, GET /api/auth/me, requireAuth middleware (no Google OAuth yet)
-- Frontend auth UI — hash routes `#/login` and `#/register`; session restore via GET /api/auth/me
+- In-app reader — complete published HTML works served from internal storage; authenticated readers with an active issue can save and restore scroll progress and accumulate visible reading time
+- Authentication — email/password register and login, Google Identity token verification, GET /api/auth/me, Cortex JWT
+- Book issuing — authenticated loans with token deduction, My Library, returns without refund
+- Token wallet — welcome allocation, ledger, configurable issue cost
+- Reader analytics — authenticated GET /api/analytics and hash route `#/analytics` (issues, tokens, saved progress, measured reading time)
+- CORTEX-20 — US-04: Reader profile view and display-name edit (`#/profile`, GET/PUT `/api/auth/profile`)
+- CORTEX-21 — US-05: Save reading progress (`GET/PUT /api/books/:id/progress`, HTML scroll percent)
+- CORTEX-19 — reading analytics now joins `reading_progress` and `reading_sessions` for the authenticated user
+- CORTEX-22 — deterministic, explainable recommendations from the authenticated user's own issue history, progress, sessions, categories, and authors (`GET /api/recommendations`, `#/recommendations`)
 
 COMPLETED:
 - Root monorepo structure (frontend, backend, ml-service, database, docs)
@@ -363,6 +369,7 @@ ARCHITECTURE DECISIONS:
 - Backend uses routes → controllers → services → repositories pattern
 - ML processing isolated in Python FastAPI service (not in Node.js)
 - Browser calls backend via VITE_API_URL (localhost-mapped port)
+- Frontend image is built with Compose build args `VITE_API_URL` and `VITE_GOOGLE_CLIENT_ID` (Vite inlines them into `dist/`). Catalog covers are served by the Vite preview middleware from `/storage`.
 - Inside Docker Compose, services communicate via service names
 - Catalog schema lives in `database/migrations/` and is applied to local PostgreSQL
 - Database connectivity uses `pg` Pool in `backend/src/config/database.js`
@@ -371,12 +378,25 @@ ARCHITECTURE DECISIONS:
 - Authentication uses bcryptjs password hashes and jsonwebtoken access tokens
 - JWT_SECRET and JWT_EXPIRES_IN come from environment configuration (Docker Compose passes them into the backend)
 - requireAuth middleware reads `Authorization: Bearer <token>` and attaches `req.user` (public fields only)
-- Catalog browse, book details, and HTML content routes stay public (no requireAuth)
+- Catalog browse and book details stay public (no requireAuth)
+- GET /api/books/:id/content requires a valid Cortex JWT and an active issue for that book (401 / 403 otherwise)
+- Identity for content, issues, and tokens always comes from `req.user.id`; client `user_id` is ignored
 - Password hashes, plaintext passwords, and JWT secrets are never returned in API bodies or logged
 - Frontend JWT is stored in localStorage key `cortex.library.accessToken` (documented in `frontend/src/auth/tokenStorage.js`); the token is not kept in React state
 - AuthProvider restores the session on startup with GET /api/auth/me and clears the token on 401
-- Catalog, book details, and content API calls from the frontend do not send the Authorization header
-- Hash routes `#/login` and `#/register` are public; they do not gate the catalog or reader
+- Catalog, book details, and catalog search API calls from the frontend do not send the Authorization header
+- Book content requests send the stored Cortex JWT
+- Hash routes `#/login` and `#/register` are public; they do not gate the catalog. The reader `#/books/:id/read` is gated in the UI and enforced by the content API
+- Hash route `#/analytics` is public to visit; the API requires a Cortex JWT. Query `user_id` is ignored; aggregates always use `req.user.id`
+- SVG covers wrap long titles with a shared multiline helper and keep text inside a clipped safe area; catalog cards use the SVG aspect ratio (2:3) without cropping
+- Token balances and issue costs come from environment (`INITIAL_TOKEN_BALANCE`, `BOOK_ISSUE_TOKEN_COST`), not scattered literals
+- Book issue and token deduction run in one PostgreSQL transaction with `SELECT … FOR UPDATE` on the wallet
+- Duplicate active issues return 409 before tokens are charged; a partial unique index is the second layer
+- Returning a book does not refund tokens in this phase
+- Google sign-in verifies the Google ID token server-side (`google-auth-library`); the frontend only sends the credential, never a claimed email
+- Google OAuth-only users store `google_sub` and a NULL `password_hash`; email/password users keep a bcrypt hash
+- Optional `users.display_name` is the only editable reader profile field; email remains the unique login identity
+- After Google verification the API issues the same Cortex JWT as email/password login; Google tokens are not stored in localStorage
 
 DATABASE CONNECTION (confirmed 2026-08-29):
 - Backend connects to PostgreSQL using discrete env vars: POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
@@ -397,7 +417,13 @@ DATABASE DESIGN (CORTEX-10, migrated 2026-08-29):
   - database/migrations/005_create_book_authors.sql
   - database/migrations/006_create_book_categories.sql
   - database/migrations/007_create_users.sql
-- Entities created: categories, authors, books, book_authors, book_categories, users
+  - database/migrations/008_create_book_issues.sql
+  - database/migrations/009_create_token_wallets.sql
+  - database/migrations/010_add_google_oauth.sql
+  - database/migrations/011_add_user_display_name.sql
+  - database/migrations/012_create_reading_progress.sql
+  - database/migrations/013_create_reading_sessions.sql
+- Entities created: categories, authors, books, book_authors, book_categories, users, book_issues, user_token_wallets, token_transactions, reading_progress, reading_sessions
 - books M:N categories via book_categories (no books.primary_category_id)
 - categories.parent_id for hierarchical taxonomy; no separate genres table
 - language_code VARCHAR(10)
@@ -409,11 +435,13 @@ DATABASE DESIGN (CORTEX-10, migrated 2026-08-29):
   - Optional file generator: database/seeds/generate-book-files.mjs
   - 11 categories (hierarchical), 9 authors, 10 published books
   - 10 book_authors, 15 book_categories
-  - HTML excerpts at storage/books/{book_id}/content.html
+  - Complete public-domain HTML at storage/books/{book_id}/content.html (10 titles; same deterministic UUIDs)
   - Project-owned SVG covers at storage/books/{book_id}/cover.svg
+  - Byte sizes, total_pages, and estimated_reading_minutes are derived from the stored files (`002_update_content_byte_sizes.sql`)
   - Re-running the seed UPSERTs by deterministic UUID; it does not create duplicate rows
   - ISBN is NULL (original editions predate ISBN)
-  - Seeded texts are public-domain US works; files are representative excerpts, not complete books
+  - Seeded texts are complete US public-domain literary works from Project Gutenberg UTF-8 plain text (not Gutenberg HTML or catalog pages). See database/seeds/SOURCES.md.
+- Repeatable, resumable catalog expansion tool: `database/seeds/import-gutenberg-catalog.mjs`; retries transient HTTPS failures with a bounded policy and records page checkpoints/failures. The live catalog was verified at 100 books on 2026-10-05 (10 originals plus 90 Gutenberg imports); page 4 is currently pending upstream recovery. See `database/seeds/SOURCES.md`.
 
 CATALOG API (CORTEX-6, 2026-08-31):
 - GET /api/books — published catalog list
@@ -435,24 +463,36 @@ CATALOG API (CORTEX-6, 2026-08-31):
   - Covers served by Vite middleware from `storage/books/{id}/cover.*` (read-only Docker mount at `/storage`)
   - Loading, empty, and error states
 
-BOOK CONTENT API (2026-08-31):
-- GET /api/books/:id/content — streams stored HTML for a published book
+BOOK CONTENT API (2026-09-02):
+- GET /api/books/:id/content — streams stored HTML for a published book that the caller has actively issued
+  - requireAuth: missing/invalid JWT → 401
+  - No active issue for `req.user.id` + that book → 403 `This book is not in your library.`
   - :id must be a UUID → 400 otherwise
   - Resolves file only from the book's `content_storage_key` in PostgreSQL
   - Allowed key shape: `storage/books/{same-book-id}/content.html` under BOOK_STORAGE_ROOT
-  - Client path/query parameters are ignored; arbitrary filesystem paths are rejected
+  - Client path/query parameters (including `user_id`) are ignored; arbitrary filesystem paths are rejected
   - Unpublished/missing book → 404; missing or non-HTML content → 404
   - Response: text/html; charset=utf-8
 - Backend Docker service mounts `./storage` read-only at `/storage` (`BOOK_STORAGE_ROOT=/storage`)
 
-IN-APP READER (2026-08-31):
+IN-APP READER (2026-09-02):
 - Hash route: `#/books/:id/read`
-- Book details "Read book" action for HTML content
-- Loads GET /api/books/:id and GET /api/books/:id/content
-- Shows title, authors, readable typography; back to details and library
-- Loading, missing-content, and error states
+- Public catalog and details; reading requires login and an active issue
+- Logged out: login required (link to `#/login?next=/books/:id/read`)
+- Logged in without an issue: "This book is not in your library." plus Issue for tokens; after issue, tokens and content refresh immediately
+- Loads GET /api/books/:id (public) and GET /api/books/:id/content (authenticated)
+- Shows title, authors, readable typography; back to details and My Library
 - HTML is rendered from the stored article body (scripts and unsafe tags stripped)
-- Reader remains public (no login required); no reading progress, attention analysis, recommendations, or issuing
+- Saved progress is HTML scroll percentage. It is not a page number, attention score, or reading time
+- GET/PUT `/api/books/:id/progress` require the same Cortex JWT and active issue as content
+- Reader restores the saved position, shows “n% complete”, and may show “Resumed from n%”
+- Saves are debounced on scroll, flushed on a 20s interval, visibility hidden, and reader unmount
+- In-reader hash links wait for a progress/session flush before navigating so My Library and Analytics do not load a stale GET ahead of the PUT
+- Restore waits for article layout and will not overwrite a saved position with 0% unless the reader actually scrolled
+- My Library shows “Not started”, “n% complete”, or “Completed” from PostgreSQL `reading_progress`
+- Continue reading opens the existing reader
+- Visible reading time uses `POST /api/books/:id/reading-sessions/start|heartbeat|stop`; the reader pauses when the tab is hidden, the window blurs, or the reader is idle (~45s without pointer/keyboard/scroll activity) and flushes about every 25s plus lifecycle events. Session flushes are serialized so a heartbeat cannot race a stop. The Docker frontend image must be rebuilt to pick up reader/analytics UI (`docker compose build frontend`).
+- Saved progress is not attention, engagement, or a recommendation score
 
 AUTHENTICATION API (2026-08-31):
 - POST /api/auth/register — create account (email + password)
@@ -466,40 +506,135 @@ AUTHENTICATION API (2026-08-31):
   - Header: `Authorization: Bearer <token>`
   - Success: 200 `{ user }`
   - Missing, invalid, or expired token → 401
-- password_hash is never included in responses
-- Tests: backend `npm test` (node:test, src/books.api.test.js then src/auth.api.test.js) against PostgreSQL inside Docker
+- POST /api/auth/google — Google ID token → same `{ user, token }` session model
+- GET /api/auth/profile — same safe user payload as `/me` (requireAuth)
+- PUT /api/auth/profile — authenticated; updates `users.display_name` for `req.user.id` only
+  - Body: `{ displayName }` (required string, trimmed, 1–120 chars)
+  - Client `user_id` / `id` / `email` in the body are ignored
+  - Success: 200 `{ user }` (no JWT in the body)
+  - Invalid/empty name → 400; missing/invalid JWT → 401
+- Safe user payload includes `id`, `email`, `displayName`, `createdAt`, `updatedAt`, `hasPassword`, `hasGoogle`
+- password_hash, google_sub, and JWT secrets are never included in responses
+- Tests: backend `npm test` runs books 12, auth 24, library 22, tokens 10, analytics 8, progress 10, reading sessions 7, recommendations 15, Gutenberg import 4 against PostgreSQL inside Docker
 
-FRONTEND AUTH UI (2026-08-31):
-- Hash routes: `#/login`, `#/register` (plus existing catalog, details, reader, status)
-- Site nav: Log in / Register when signed out; email + Log out when signed in
-- AuthProvider (`frontend/src/context/AuthContext.jsx`) owns session: register, login, logout, restore
-- Forms validate email and password length before calling the API; loading, error, and success banners
+FRONTEND AUTH UI (2026-08-31, Google 2026-09-01):
+- Hash routes: `#/login`, `#/register`, `#/profile` (plus existing catalog, details, reader, library, analytics, status)
+- `#/profile` is public to visit; logged-out users see the existing login CTA with `next=/profile` and no profile data. The API requires a Cortex JWT
+- Site nav: Log in / Register when signed out; Catalog, My Library, Analytics, Profile, email, token balance, and Log out when signed in
+- AuthProvider (`frontend/src/context/AuthContext.jsx`) owns session: register, login, loginWithGoogle, logout, restore, updateProfile
+- TokenProvider loads GET /api/tokens for the signed-in user and refreshes after issue
+- Forms validate email format before calling the API (trim + lowercase; reject incomplete domains such as `abc@gmail`); backend validation is authoritative
 - Duplicate email (409) and invalid credentials (401) surface the API error message
 - Passwords use `type=password` and are not stored; JWT is never rendered or logged
+- Continue with Google uses Google Identity Services in the browser; only `VITE_GOOGLE_CLIENT_ID` is public. Backend verifies with `GOOGLE_CLIENT_ID`. Both must be the same Web client ID; `GOOGLE_CLIENT_SECRET` is unused for this GIS button flow.
+
+BOOK ISSUING AND MY LIBRARY (2026-08-31, tokens 2026-09-01):
+- POST /api/books/:id/issue — authenticated; published books only; one active issue per user+book
+  - Invalid UUID → 400; missing/unpublished → 404; duplicate active → 409
+  - Requires `BOOK_ISSUE_TOKEN_COST` tokens (default 2); insufficient balance → 402
+  - Deducts tokens and inserts `book_issue` + `token_transactions` (`book_issue`) atomically
+  - Identity from `req.user.id` only
+- GET /api/library — authenticated list of the current user's issues
+  - Each issue includes `progressPercent` (number or null). Null means no saved position (Not started). This is scroll percent, not a page number.
+- POST /api/library/:issueId/return — authenticated; owner only; no token refund
+- Hash route `#/library`; details page Issue / Not enough tokens / Already in My Library
+
+TOKEN WALLET API (2026-09-01):
+- GET /api/tokens — authenticated `{ balance, issueCost, transactions }`
+- Query `user_id` is ignored; data is always for `req.user.id`
+- Transaction history omits internal ids; `password_hash` is never returned
+- New accounts (email/password or Google) receive `INITIAL_TOKEN_BALANCE` (default 10) once as `welcome_bonus`
+- Ledger types reserved now: `welcome_bonus`, `book_issue`, `admin_grant`, `level_reward` (level_reward is not implemented)
+
+READER ANALYTICS API (CORTEX-19, 2026-10-03):
+- GET /api/analytics — authenticated summary for `req.user.id` only; client `user_id` is ignored
+- Empty report when the user has no `book_issues` (`hasIssueHistory: false`, zeroed counts, empty lists)
+- Includes unique/total issues, active/returned/expired counts, tokens spent on issues, catalog page/minute estimates for issued titles, category breakdown, currently issued, recently issued, recently returned
+- `readingProgress` joins `reading_progress` on `(user_id, book_id)`: booksStarted, booksCompleted, averageProgressPercent, per-book progress and measured seconds
+- `readingTime` sums `reading_sessions.duration_seconds`: totalSeconds, totalMinutes, recentSessions
+- Catalog minutes/pages are labeled as catalog estimates, not measured reading time
+- `unavailable.attention` explains that attention is not stored; progress and sessions are available
+- Does not fabricate session, progress, or attention scores
+- Reader reports session startup, heartbeat, and progress load/save failures in an alert and logs the underlying error to the browser console
+- Tests: `backend/src/analytics.api.test.js`, `backend/src/readingSessions.api.test.js`
+- Frontend: `#/analytics` shows progress totals, per-book progress and measured time, and catalog estimates with explicit catalog labels; nav links from SiteNav and My Library
+
+READER PROFILE (CORTEX-20, 2026-10-03):
+- Hash route `#/profile` loads GET `/api/auth/profile` for the signed-in user
+- Edit/Save/Cancel update PUT `/api/auth/profile` (`displayName` only)
+- Sign-in methods shown as booleans (`hasPassword` / `hasGoogle`); `google_sub` is never sent to the client
+- Member since uses `users.created_at`
+- Logout uses the existing AuthProvider session clear
+
+READING PROGRESS API (CORTEX-21, 2026-10-03):
+- Table `reading_progress`: one row per `(user_id, book_id)` with `progress_percent` 0–100
+- GET /api/books/:id/progress — requireAuth and an active issue for `req.user.id`
+  - Success: 200 `{ progress: { bookId, progressPercent, updatedAt } }`
+  - No row yet: `progressPercent` and `updatedAt` are null
+- PUT /api/books/:id/progress — body `{ progressPercent }` (finite number, 0–100)
+  - Identity from `req.user.id` only; client `user_id` is ignored
+  - Upserts the caller's row; 200 `{ progress }`
+  - Invalid/missing/negative/>100 → 400; missing JWT → 401; no active issue (including returned) → 403
+- Progress is HTML scroll percentage. It is not a page number, attention score, or reading time.
+- Tests: `backend/src/progress.api.test.js`
+
+READING SESSION API (2026-10-03):
+- Table `reading_sessions`: open or closed intervals of visible reading time per user and book
+- POST /api/books/:id/reading-sessions/start — requireAuth and an active issue; reuses the open row if one exists
+- POST /api/books/:id/reading-sessions/heartbeat — body `{ elapsedSeconds }` (integer 0–60); adds to the open session
+- POST /api/books/:id/reading-sessions/stop — optional `{ elapsedSeconds }`; closes the open session; extra stop does not add time
+- Identity from `req.user.id` only; missing JWT → 401; no active issue (including returned/expired) → 403; invalid duration → 400
+- Duration is accumulated active seconds from the reader, not wall-clock time the tab was merely open
+- Tests: `backend/src/readingSessions.api.test.js`
+
+PERSONALIZED RECOMMENDATIONS API (CORTEX-22, 2026-10-05):
+- Authenticated `GET /api/recommendations`; derives user identity only from `req.user.id`
+- Uses only the current user's issued-book history, saved progress, and measured session seconds plus catalog categories/authors
+- Candidates must be published, have reader content metadata, and never previously issued by the current user
+- Deterministic score: each matched category contributes 3 × source interaction weight; each shared author contributes 1 × source interaction weight. Source weight is 1 + progress fraction (0–1) + capped session support (0–0.25 at 20 minutes)
+- Scores are ranking values, not probabilities. Reasons cite actual source titles/categories/authors; session duration is supporting interaction depth and is not treated as a like signal
+- Empty/insufficient history returns an explicit state. No attention, emotion, sentiment, or cross-user popularity signals are fabricated
+- No new database tables or migrations. Frontend `#/recommendations` reuses the existing book cards and catalog links
+
+GOOGLE OAUTH API (2026-09-01):
+- POST /api/auth/google — body `{ credential }` (Google ID token)
+  - Verifies audience against `GOOGLE_CLIENT_ID`
+  - Unverified or incomplete identity → 401; missing credential → 400; unconfigured client → 503
+  - Existing `google_sub` or matching verified email logs into that user (no duplicate)
+  - New Google users are created without a password hash and receive the welcome wallet once
+  - Success: 200 `{ user, token }` (Cortex JWT)
 
 BOOK CONTENT STRATEGY:
 - Users read inside Cortex Library (React reader); backend serves stored files
 - Do not redirect to external sites, require PDF download, or store external reading URLs
 - Example key: storage/books/{book_id}/content.html
 - content_format CHECK: html | epub | markdown (EPUB parsing later)
+- Development catalog stores **complete public-domain works**, not excerpts
+- Source: Project Gutenberg plain-text ebooks, converted to semantic HTML by `database/seeds/generate-book-files.mjs`
+- HTML is article/section/h1/h2/p only; no scripts, iframes, forms, or outbound reading links
+- Covers are original Cortex Library SVGs, not publisher artwork
 
 NOT YET IMPLEMENTED:
-- Google OAuth
-- Book issuing
-- Reading progress
+- XP, levels, and level-up token rewards
+- Premium vs standard book token pricing
 - Attention engine and camera capture
-- Reading analytics and engagement storage
-- Recommendation engine
-- Protecting the reader behind login (intentionally public for now)
+- Persistent engagement/attention storage (analytics reports unavailability instead of inventing scores)
+- Payments
+- Google GIS is inlined at frontend image build. Docker Compose passes `VITE_GOOGLE_CLIENT_ID` (falling back to `GOOGLE_CLIENT_ID`) as a build arg. The frontend image does not receive `GOOGLE_CLIENT_SECRET`. After changing the client ID, rebuild the frontend image (`docker compose build frontend`).
 
 NEXT RECOMMENDED PHASE:
-Book issuing (authenticated), then reading progress. Catalog browse and in-library HTML reading remain available without login. Google OAuth is deferred.
+Choose the next Jira story from the project backlog. CORTEX-22 uses a deterministic content-based ranker and does not infer attention, emotion, or sentiment. Token ledger already accepts a future `level_reward` type; issue cost stays centralized so premium pricing can be added later without changing the wallet schema.
 
 ==================================================
 20. KNOWN ISSUES
 ==================================================
 
-- None identified at this time.
+- The frontend Compose service serves a built image. After changing reader, library, or analytics UI, rebuild with `docker compose build frontend` (or `docker compose up --build frontend`). Backend source is bind-mounted and does not need an image rebuild for JS changes.
+  - `GOOGLE_CLIENT_ID` (backend ID-token audience)
+  - `VITE_GOOGLE_CLIENT_ID` (frontend GIS; public; Compose falls back to `GOOGLE_CLIENT_ID` if unset)
+  - Both values must match. Do not put `GOOGLE_CLIENT_SECRET` in the frontend or in frontend build args.
+  - Authorized JavaScript origins must include `http://localhost:5173`.
+  - Rebuild the frontend image after changing these variables so Vite can inline `VITE_GOOGLE_CLIENT_ID`.
 
 ==================================================
 21. DEVELOPMENT NOTES
@@ -517,10 +652,7 @@ DATABASE OPERATIONS (operational guidance — not a current defect):
 22. FUTURE WORK
 ==================================================
 
-- Google OAuth
-- Book library management / issuing
-- Token-based book issuing
-- Reading session and progress tracking
+- XP / levels / reading-time rewards credited as `level_reward`
+- Premium book classification and higher issue costs
 - Attention engine integration (OpenCV, MediaPipe)
-- Reading analytics dashboard
 - Personalized recommendations

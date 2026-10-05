@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { isValidEmail, normalizeEmail } from '../auth/email';
 import { catalogHash } from '../hooks/useHashRoute';
 import { useAuth } from '../context/AuthContext';
+import GoogleSignInButton from './GoogleSignInButton';
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 72;
 const MAX_EMAIL_LENGTH = 254;
@@ -14,7 +15,7 @@ function validate({ email, password, mode }) {
     return 'Enter your email address.';
   }
 
-  if (trimmedEmail.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(trimmedEmail)) {
+  if (!isValidEmail(trimmedEmail)) {
     return 'Enter a valid email address.';
   }
 
@@ -39,6 +40,7 @@ function AuthForm({
   lede,
   submitLabel,
   footer,
+  nextHash,
 }) {
   const { login, register } = useAuth();
   const [email, setEmail] = useState('');
@@ -46,6 +48,15 @@ function AuthForm({
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const finishSignedIn = useCallback(
+    (message) => {
+      setSuccess(message);
+      setPassword('');
+      window.location.hash = nextHash || catalogHash();
+    },
+    [nextHash]
+  );
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -63,21 +74,32 @@ function AuthForm({
 
     try {
       if (mode === 'register') {
-        await register({ email: email.trim(), password });
-        setSuccess('Account created. Opening the library…');
+        await register({ email: normalizeEmail(email), password });
+        finishSignedIn('Account created. Opening the library…');
       } else {
-        await login({ email: email.trim(), password });
-        setSuccess('Signed in. Opening the library…');
+        await login({ email: normalizeEmail(email), password });
+        finishSignedIn('Signed in. Opening the library…');
       }
-
-      setPassword('');
-      window.location.hash = catalogHash();
     } catch (err) {
       setError(err.message || 'Unable to complete the request.');
     } finally {
       setSubmitting(false);
     }
   }
+
+  const handleGoogleError = useCallback((message) => {
+    setSuccess(null);
+    setError(message);
+  }, []);
+
+  const handleGoogleSuccess = useCallback(() => {
+    setError(null);
+    finishSignedIn(
+      mode === 'register'
+        ? 'Account created with Google. Opening the library…'
+        : 'Signed in with Google. Opening the library…'
+    );
+  }, [finishSignedIn, mode]);
 
   return (
     <main className="page page--auth">
@@ -132,6 +154,16 @@ function AuthForm({
         <button className="button button--primary auth-submit" type="submit" disabled={submitting}>
           {submitting ? 'Please wait…' : submitLabel}
         </button>
+
+        <div className="auth-divider">
+          <span>or</span>
+        </div>
+
+        <GoogleSignInButton
+          disabled={submitting}
+          onError={handleGoogleError}
+          onSuccess={handleGoogleSuccess}
+        />
 
         <p className="auth-footer">{footer}</p>
         </form>

@@ -1,9 +1,11 @@
 import AuthForm from '../components/AuthForm';
-import { catalogHash, registerHash } from '../hooks/useHashRoute';
+import { catalogHash, useHashRoute } from '../hooks/useHashRoute';
 import { useAuth } from '../context/AuthContext';
 
 function LoginPage() {
   const { user, ready } = useAuth();
+  const route = useHashRoute();
+  const nextHash = route.next ? `#${route.next}` : catalogHash();
 
   if (!ready) {
     return (
@@ -23,12 +25,13 @@ function LoginPage() {
             <p className="eyebrow">Cortex Library</p>
             <h1>You are signed in</h1>
             <p className="lede">
-              Signed in as {user.email}. The catalog stays open to everyone.
+              Signed in as {user.email}. Browse the catalog publicly, then issue
+              a title to read it.
             </p>
           </header>
           <p>
-            <a className="button button--primary" href={catalogHash()}>
-              Back to catalog
+            <a className="button button--primary" href={nextHash}>
+              Continue
             </a>
           </p>
         </div>
@@ -40,11 +43,12 @@ function LoginPage() {
     <AuthForm
       mode="login"
       title="Log in"
-      lede="Use the email and password for your Cortex Library account."
+      lede="Use your email and password, or continue with Google. Sign in to issue books to My Library."
       submitLabel="Log in"
+      nextHash={nextHash}
       footer={
         <>
-          Need an account? <a href={registerHash()}>Register</a>
+          Need an account? <a href="#/register">Register</a>
         </>
       }
     />

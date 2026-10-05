@@ -37,3 +37,6 @@ docker-compose.override.yml
 
 # Coverage
 coverage/
+
+# Gutenberg plain-text cache used by database/seeds/generate-book-files.mjs
+database/seeds/.cache/

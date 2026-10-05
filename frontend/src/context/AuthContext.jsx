@@ -1,6 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { clearStoredToken, getStoredToken, setStoredToken } from '../auth/tokenStorage';
-import { getMe, loginAccount, registerAccount } from '../services/api';
+import {
+  getMe,
+  loginAccount,
+  loginWithGoogleAccount,
+  registerAccount,
+  updateProfile as updateProfileRequest,
+} from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -12,8 +18,11 @@ function toPublicUser(user) {
   return {
     id: user.id,
     email: user.email,
+    displayName: user.displayName || null,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
+    hasPassword: Boolean(user.hasPassword),
+    hasGoogle: Boolean(user.hasGoogle),
   };
 }
 
@@ -86,9 +95,24 @@ export function AuthProvider({ children }) {
     [applySession]
   );
 
+  const loginWithGoogle = useCallback(
+    async (credential) => {
+      const data = await loginWithGoogleAccount(credential);
+      applySession(data.token, data.user);
+      return toPublicUser(data.user);
+    },
+    [applySession]
+  );
+
   const logout = useCallback(() => {
     clearSession();
   }, [clearSession]);
+
+  const updateProfile = useCallback(async ({ displayName }) => {
+    const data = await updateProfileRequest({ displayName });
+    setUser(toPublicUser(data.user));
+    return toPublicUser(data.user);
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -97,9 +121,11 @@ export function AuthProvider({ children }) {
       isAuthenticated: Boolean(user),
       register,
       login,
+      loginWithGoogle,
       logout,
+      updateProfile,
     }),
-    [user, ready, register, login, logout]
+    [user, ready, register, login, loginWithGoogle, logout, updateProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

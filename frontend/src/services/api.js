@@ -16,6 +16,20 @@ function authorizationHeader(skipAuth) {
   return { Authorization: `Bearer ${token}` };
 }
 
+async function parseJsonBody(response) {
+  const text = await response.text();
+
+  if (!text) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return {};
+  }
+}
+
 async function request(path, options = {}) {
   const { skipAuth = false, headers: extraHeaders, ...fetchOptions } = options;
 
@@ -28,24 +42,17 @@ async function request(path, options = {}) {
     },
   });
 
+  const body = await parseJsonBody(response);
+
   if (!response.ok) {
-    let message = `Request failed: ${response.status}`;
-
-    try {
-      const body = await response.json();
-      if (body?.message) {
-        message = body.message;
-      }
-    } catch {
-      // Keep the status-based message when the body is not JSON.
-    }
-
-    const error = new Error(message);
+    const error = new Error(
+      body?.message || `Request failed: ${response.status}`
+    );
     error.status = response.status;
     throw error;
   }
 
-  return response.json();
+  return body;
 }
 
 export async function getBackendHealth() {
@@ -79,8 +86,45 @@ export async function getBook(id) {
   return request(`/api/books/${id}`, { skipAuth: true });
 }
 
+export async function getBookProgress(id) {
+  return request(`/api/books/${id}/progress`);
+}
+
+export async function saveBookProgress(id, progressPercent, options = {}) {
+  return request(`/api/books/${id}/progress`, {
+    method: 'PUT',
+    keepalive: Boolean(options.keepalive),
+    body: JSON.stringify({ progressPercent }),
+  });
+}
+
+export async function startReadingSession(id) {
+  return request(`/api/books/${id}/reading-sessions/start`, {
+    method: 'POST',
+    body: '{}',
+  });
+}
+
+export async function heartbeatReadingSession(id, elapsedSeconds, options = {}) {
+  return request(`/api/books/${id}/reading-sessions/heartbeat`, {
+    method: 'POST',
+    keepalive: Boolean(options.keepalive),
+    body: JSON.stringify({ elapsedSeconds }),
+  });
+}
+
+export async function stopReadingSession(id, elapsedSeconds, options = {}) {
+  return request(`/api/books/${id}/reading-sessions/stop`, {
+    method: 'POST',
+    keepalive: Boolean(options.keepalive),
+    body: JSON.stringify({ elapsedSeconds }),
+  });
+}
+
 export async function getBookContent(id) {
-  const response = await fetch(`${API_BASE_URL}/api/books/${id}/content`);
+  const response = await fetch(`${API_BASE_URL}/api/books/${id}/content`, {
+    headers: authorizationHeader(false),
+  });
 
   if (!response.ok) {
     let message = `Request failed: ${response.status}`;
@@ -118,8 +162,54 @@ export async function loginAccount({ email, password }) {
   });
 }
 
+export async function loginWithGoogleAccount(credential) {
+  return request('/api/auth/google', {
+    method: 'POST',
+    skipAuth: true,
+    body: JSON.stringify({ credential }),
+  });
+}
+
 export async function getMe() {
   return request('/api/auth/me');
+}
+
+export async function getProfile() {
+  return request('/api/auth/profile');
+}
+
+export async function updateProfile({ displayName }) {
+  return request('/api/auth/profile', {
+    method: 'PUT',
+    body: JSON.stringify({ displayName }),
+  });
+}
+
+export async function getTokens() {
+  return request('/api/tokens');
+}
+
+export async function getAnalytics() {
+  return request('/api/analytics');
+}
+
+export async function getRecommendations() {
+  return request('/api/recommendations');
+}
+
+export async function issueBook(id) {
+  return request(`/api/books/${id}/issue`, { method: 'POST', body: '{}' });
+}
+
+export async function listLibrary() {
+  return request('/api/library');
+}
+
+export async function returnIssue(issueId) {
+  return request(`/api/library/${issueId}/return`, {
+    method: 'POST',
+    body: '{}',
+  });
 }
 
 export { API_BASE_URL };

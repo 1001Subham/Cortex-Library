@@ -1,0 +1,15 @@
+{
+  "failures": [
+    {
+      "page": 4,
+      "url": "https://gutendex.com/books/?languages=en&copyright=false&mime_type=text%2Fplain&sort=popular&page=4",
+      "requestUrl": "https://gutendex.com/books/?languages=en&copyright=false&mime_type=text%2Fplain&sort=popular&page=4",
+      "attempts": 4,
+      "status": null,
+      "error": "Gutenberg request failed after 4 attempts: https://gutendex.com/books/?languages=en&copyright=false&mime_type=text%2Fplain&sort=popular&page=4",
+      "firstFailedAt": "2026-10-05T12:04:24.693Z",
+      "lastFailedAt": "2026-10-05T12:04:24.693Z",
+      "resolvedAt": null
+    }
+  ]
+}

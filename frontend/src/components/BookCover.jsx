@@ -2,13 +2,18 @@ import { useEffect, useState } from 'react';
 import { coverUrlFromKey } from '../utils/coverUrl';
 
 function BookCover({ title, coverImageKey, className }) {
-  const src = coverUrlFromKey(coverImageKey);
+  const [useSvgFallback, setUseSvgFallback] = useState(false);
   const [failed, setFailed] = useState(false);
+  const fallbackKey = typeof coverImageKey === 'string'
+    ? coverImageKey.replace(/\.(?:jpe?g|png|webp)$/i, '.svg')
+    : null;
+  const src = coverUrlFromKey(useSvgFallback ? fallbackKey : coverImageKey);
   const classes = `book-cover ${className || ''}`.trim();
 
   useEffect(() => {
+    setUseSvgFallback(false);
     setFailed(false);
-  }, [src]);
+  }, [coverImageKey]);
 
   if (!src || failed) {
     return (
@@ -23,7 +28,10 @@ function BookCover({ title, coverImageKey, className }) {
       className={classes}
       src={src}
       alt={`${title} cover`}
-      onError={() => setFailed(true)}
+      onError={() => {
+        if (!useSvgFallback && fallbackKey !== coverImageKey) setUseSvgFallback(true);
+        else setFailed(true);
+      }}
     />
   );
 }

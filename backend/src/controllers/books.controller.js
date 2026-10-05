@@ -1,5 +1,5 @@
 import { asyncHandler } from '../middleware/httpError.js';
-import { getPublishedHtmlContentPath } from '../services/bookContent.service.js';
+import { getIssuedHtmlContentPath } from '../services/bookContent.service.js';
 import { getBookById, listBooks } from '../services/books.service.js';
 import {
   parseBookId,
@@ -44,7 +44,7 @@ export const getBookContentHandler = asyncHandler(async (req, res, next) => {
     });
   }
 
-  const filePath = await getPublishedHtmlContentPath(parsed.value);
+  const filePath = await getIssuedHtmlContentPath(req.user.id, parsed.value);
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('X-Content-Type-Options', 'nosniff');

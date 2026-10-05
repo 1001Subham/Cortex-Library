@@ -1,15 +1,22 @@
 import {
+  analyticsHash,
   catalogHash,
+  libraryHash,
   loginHash,
+  profileHash,
+  recommendationsHash,
   registerHash,
   useHashRoute,
 } from '../hooks/useHashRoute';
 import { useAuth } from '../context/AuthContext';
+import { useTokens } from '../context/TokenContext';
 
 function SiteNav() {
   const { user, ready, logout } = useAuth();
+  const { balance } = useTokens();
   const route = useHashRoute();
-  const initial = user?.email?.slice(0, 1).toUpperCase() || '';
+  const initial =
+    (user?.displayName || user?.email || '').slice(0, 1).toUpperCase() || '';
 
   return (
     <nav className="site-nav">
@@ -30,6 +37,38 @@ function SiteNav() {
           >
             Catalog
           </a>
+          {ready && user ? (
+            <>
+              <a
+                href={libraryHash()}
+                className={route.name === 'library' ? 'is-active' : undefined}
+                aria-current={route.name === 'library' ? 'page' : undefined}
+              >
+                My Library
+              </a>
+              <a
+                href={recommendationsHash()}
+                className={route.name === 'recommendations' ? 'is-active' : undefined}
+                aria-current={route.name === 'recommendations' ? 'page' : undefined}
+              >
+                For you
+              </a>
+              <a
+                href={analyticsHash()}
+                className={route.name === 'analytics' ? 'is-active' : undefined}
+                aria-current={route.name === 'analytics' ? 'page' : undefined}
+              >
+                Analytics
+              </a>
+              <a
+                href={profileHash()}
+                className={route.name === 'profile' ? 'is-active' : undefined}
+                aria-current={route.name === 'profile' ? 'page' : undefined}
+              >
+                Profile
+              </a>
+            </>
+          ) : null}
           <a
             href="#/status"
             className={route.name === 'status' ? 'is-active' : undefined}
@@ -41,6 +80,9 @@ function SiteNav() {
             <div className="site-nav__user">
               <span className="site-nav__avatar" aria-hidden="true">
                 {initial}
+              </span>
+              <span className="site-nav__tokens">
+                Tokens: {balance === null ? '—' : balance}
               </span>
               <span className="site-nav__email">{user.email}</span>
               <button type="button" className="site-nav__logout" onClick={logout}>

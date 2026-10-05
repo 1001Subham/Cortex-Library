@@ -1,0 +1,722 @@
+[
+  {
+    "gutenbergId": 2701,
+    "url": "https://www.gutenberg.org/ebooks/2701",
+    "copyrightInUs": false,
+    "title": "Moby Dick; Or, The Whale",
+    "bookId": "3521fd44-d45c-5025-bc1e-98875bccc35f",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 84,
+    "url": "https://www.gutenberg.org/ebooks/84",
+    "copyrightInUs": false,
+    "title": "Frankenstein; or, the modern prometheus",
+    "bookId": "31ef1ddf-effb-5ecc-aef1-54113b81d694",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 1513,
+    "url": "https://www.gutenberg.org/ebooks/1513",
+    "copyrightInUs": false,
+    "title": "Romeo and Juliet",
+    "bookId": "cbe47db0-4d91-5f93-93a9-26e9b8be55e9",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 100,
+    "url": "https://www.gutenberg.org/ebooks/100",
+    "copyrightInUs": false,
+    "title": "The Complete Works of William Shakespeare",
+    "bookId": "001eb2d0-4078-5be2-a4a2-1a9f0860b422",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 2554,
+    "url": "https://www.gutenberg.org/ebooks/2554",
+    "copyrightInUs": false,
+    "title": "Crime and Punishment",
+    "bookId": "9bab3b76-aded-54cf-93b0-49438fdd0de2",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 37683,
+    "url": "https://www.gutenberg.org/ebooks/37683",
+    "copyrightInUs": false,
+    "title": "Chambers's Twentieth Century Dictionary (part 1 of 4: A-D)",
+    "bookId": "193f839b-7c46-5fcf-8c89-be1b22f6597e",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 43,
+    "url": "https://www.gutenberg.org/ebooks/43",
+    "copyrightInUs": false,
+    "title": "The strange case of Dr. Jekyll and Mr. Hyde",
+    "bookId": "f9f092bc-6c55-5289-b363-a364d65fe2c5",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 2641,
+    "url": "https://www.gutenberg.org/ebooks/2641",
+    "copyrightInUs": false,
+    "title": "A Room with a View",
+    "bookId": "00634ff0-75b7-5081-8ecc-1fd14de62b6a",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 145,
+    "url": "https://www.gutenberg.org/ebooks/145",
+    "copyrightInUs": false,
+    "title": "Middlemarch",
+    "bookId": "0d2fcfa6-30a7-5f12-89b6-333c650c020c",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 37106,
+    "url": "https://www.gutenberg.org/ebooks/37106",
+    "copyrightInUs": false,
+    "title": "Little Women; Or, Meg, Jo, Beth, and Amy",
+    "bookId": "a5fc757a-fb9e-515a-9c56-964a015444db",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 1727,
+    "url": "https://www.gutenberg.org/ebooks/1727",
+    "copyrightInUs": false,
+    "title": "The Odyssey: Rendered into English prose for the use of those who cannot read the original",
+    "bookId": "9e4e6044-df5e-58d8-8767-d3d6f26b24a4",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 67979,
+    "url": "https://www.gutenberg.org/ebooks/67979",
+    "copyrightInUs": false,
+    "title": "The Blue Castle: a novel",
+    "bookId": "3af687a3-5a79-5859-b16a-5365898767a0",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 16328,
+    "url": "https://www.gutenberg.org/ebooks/16328",
+    "copyrightInUs": false,
+    "title": "Beowulf: An Anglo-Saxon Epic Poem",
+    "bookId": "75e02cac-45f0-5d44-8af3-37fc30632703",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 24739,
+    "url": "https://www.gutenberg.org/ebooks/24739",
+    "copyrightInUs": false,
+    "title": "Bidwell's Travels, from Wall Street to London Prison: Fifteen Years in Solitude",
+    "bookId": "1e09a5ac-2738-51c3-bb2a-577714bb58d0",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 10002,
+    "url": "https://www.gutenberg.org/ebooks/10002",
+    "copyrightInUs": false,
+    "title": "The House on the Borderland",
+    "bookId": "b961c1bd-5ecd-5a23-8d2d-71f59fb32626",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 1260,
+    "url": "https://www.gutenberg.org/ebooks/1260",
+    "copyrightInUs": false,
+    "title": "Jane Eyre: An Autobiography",
+    "bookId": "34cd89e0-b316-5b8e-a2a6-00388e929fee",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 21839,
+    "url": "https://www.gutenberg.org/ebooks/21839",
+    "copyrightInUs": false,
+    "title": "Sense and Sensibility",
+    "bookId": "e2fb9f42-845c-5235-996e-34e631d91a46",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 10102,
+    "url": "https://www.gutenberg.org/ebooks/10102",
+    "copyrightInUs": false,
+    "title": "The Czar's Spy: The Mystery of a Silent Love",
+    "bookId": "7e861e80-5cd4-5c0a-8d2b-2a066ab7c56f",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 12758,
+    "url": "https://www.gutenberg.org/ebooks/12758",
+    "copyrightInUs": false,
+    "title": "Library of the World's Best Mystery and Detective Stories",
+    "bookId": "3ddeb95b-83f9-5c2d-b428-9e0ae3226b6e",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 11987,
+    "url": "https://www.gutenberg.org/ebooks/11987",
+    "copyrightInUs": false,
+    "title": "By Advice of Counsel",
+    "bookId": "cd9512ab-281f-50c5-a0e0-45ddf68436f6",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 174,
+    "url": "https://www.gutenberg.org/ebooks/174",
+    "copyrightInUs": false,
+    "title": "The Picture of Dorian Gray",
+    "bookId": "0025d8fe-64d6-5b3e-b151-70cf6a952010",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 12345,
+    "url": "https://www.gutenberg.org/ebooks/12345",
+    "copyrightInUs": false,
+    "title": "Friday, the Thirteenth: A Novel",
+    "bookId": "0f9ffcfe-d629-5973-9b7b-fd8fc1821c81",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 1184,
+    "url": "https://www.gutenberg.org/ebooks/1184",
+    "copyrightInUs": false,
+    "title": "The Count of Monte Cristo",
+    "bookId": "f790ef2d-5572-57b9-bf44-e07c6d26fadc",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 98,
+    "url": "https://www.gutenberg.org/ebooks/98",
+    "copyrightInUs": false,
+    "title": "A Tale of Two Cities",
+    "bookId": "2f0c44a9-9c77-5b1f-adf3-fb97370474e6",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 64317,
+    "url": "https://www.gutenberg.org/ebooks/64317",
+    "copyrightInUs": false,
+    "title": "The Great Gatsby",
+    "bookId": "07c3869e-ef57-5020-aa8b-d707f2f1fd47",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 2680,
+    "url": "https://www.gutenberg.org/ebooks/2680",
+    "copyrightInUs": false,
+    "title": "Meditations",
+    "bookId": "54554f26-901f-53c7-9afb-ce943553558b",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 65238,
+    "url": "https://www.gutenberg.org/ebooks/65238",
+    "copyrightInUs": false,
+    "title": "The Secret of Chimneys",
+    "bookId": "ee35b5df-3cc3-5834-8306-86e7996a4b43",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 14471,
+    "url": "https://www.gutenberg.org/ebooks/14471",
+    "copyrightInUs": false,
+    "title": "The Empty House and Other Ghost Stories",
+    "bookId": "0a6db11e-677e-56e2-84bd-0be732cb3230",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 5197,
+    "url": "https://www.gutenberg.org/ebooks/5197",
+    "copyrightInUs": false,
+    "title": "My Life — Volume 1",
+    "bookId": "309e364a-a4ec-59c1-85b1-7d83e941d041",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 15384,
+    "url": "https://www.gutenberg.org/ebooks/15384",
+    "copyrightInUs": false,
+    "title": "The Real Adventure",
+    "bookId": "3dea2db9-9c11-5ef3-9316-ae865b0e5711",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 14818,
+    "url": "https://www.gutenberg.org/ebooks/14818",
+    "copyrightInUs": false,
+    "title": "The Daughter of Anderson Crow",
+    "bookId": "65702ded-8389-5f7d-a9d5-b85f623a50cf",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 18151,
+    "url": "https://www.gutenberg.org/ebooks/18151",
+    "copyrightInUs": false,
+    "title": "Time Crime",
+    "bookId": "3d968dc8-c613-5b3c-896c-e7559cb35b00",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 10441,
+    "url": "https://www.gutenberg.org/ebooks/10441",
+    "copyrightInUs": false,
+    "title": "The Green Mouse",
+    "bookId": "fd4bfd43-4bc5-52d0-8fc0-f6fc1db83713",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 1952,
+    "url": "https://www.gutenberg.org/ebooks/1952",
+    "copyrightInUs": false,
+    "title": "The Yellow Wallpaper",
+    "bookId": "7e5fca96-5646-50ab-8edb-10ccec18828a",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 20546,
+    "url": "https://www.gutenberg.org/ebooks/20546",
+    "copyrightInUs": false,
+    "title": "The Hand in the Dark",
+    "bookId": "72fe4472-4201-51ff-82a7-9d579e17c976",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 1259,
+    "url": "https://www.gutenberg.org/ebooks/1259",
+    "copyrightInUs": false,
+    "title": "Twenty years after",
+    "bookId": "bcce9078-cf0b-52d0-bd4b-534fe7acb51e",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 16389,
+    "url": "https://www.gutenberg.org/ebooks/16389",
+    "copyrightInUs": false,
+    "title": "The Enchanted April",
+    "bookId": "e6f166dd-633a-5453-9076-79f31cae4e8f",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 20121,
+    "url": "https://www.gutenberg.org/ebooks/20121",
+    "copyrightInUs": false,
+    "title": "Lone Star Planet",
+    "bookId": "5c075bc3-2560-5036-b61c-8806d234463d",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 24793,
+    "url": "https://www.gutenberg.org/ebooks/24793",
+    "copyrightInUs": false,
+    "title": "Blow The Man Down: A Romance Of The Coast",
+    "bookId": "5fc2ec5e-47b8-576f-9abd-a688ed495cf6",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 22163,
+    "url": "https://www.gutenberg.org/ebooks/22163",
+    "copyrightInUs": false,
+    "title": "The Rover Boys on the Farm; or, Last Days at Putnam Hall",
+    "bookId": "8400f109-0ef6-562c-9abe-c5bca2dbf973",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 1232,
+    "url": "https://www.gutenberg.org/ebooks/1232",
+    "copyrightInUs": false,
+    "title": "The Prince",
+    "bookId": "55f550f3-45b6-5e40-b1f6-13d786364463",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 2600,
+    "url": "https://www.gutenberg.org/ebooks/2600",
+    "copyrightInUs": false,
+    "title": "War and Peace",
+    "bookId": "8c0a8f13-4313-59a6-880c-f29dc655b58f",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 394,
+    "url": "https://www.gutenberg.org/ebooks/394",
+    "copyrightInUs": false,
+    "title": "Cranford",
+    "bookId": "f2e4e54a-d08b-533b-a2bd-5a84a87cec85",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 8492,
+    "url": "https://www.gutenberg.org/ebooks/8492",
+    "copyrightInUs": false,
+    "title": "The King in Yellow",
+    "bookId": "c87a60c0-5a07-5c34-92bb-f8603401cf83",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 23172,
+    "url": "https://www.gutenberg.org/ebooks/23172",
+    "copyrightInUs": false,
+    "title": "The Damned Thing: 1898, From \"In the Midst of Life\"",
+    "bookId": "936b6c6a-1be1-5f36-b14b-1fffa7305b06",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 24149,
+    "url": "https://www.gutenberg.org/ebooks/24149",
+    "copyrightInUs": false,
+    "title": "The Ambulance Made Two Trips",
+    "bookId": "c7833168-f779-5284-9d24-f62ef0cfc53f",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 23599,
+    "url": "https://www.gutenberg.org/ebooks/23599",
+    "copyrightInUs": false,
+    "title": "The Big Fix",
+    "bookId": "6644c3cc-b7cd-5419-a615-0db4884bfa0f",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 2160,
+    "url": "https://www.gutenberg.org/ebooks/2160",
+    "copyrightInUs": false,
+    "title": "The Expedition of Humphry Clinker",
+    "bookId": "cc2f09d3-001d-538a-802e-34f93a53ea87",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 6761,
+    "url": "https://www.gutenberg.org/ebooks/6761",
+    "copyrightInUs": false,
+    "title": "The Adventures of Ferdinand Count Fathom — Complete",
+    "bookId": "84c0519e-a398-5cd3-91b0-69bc46e52110",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 6593,
+    "url": "https://www.gutenberg.org/ebooks/6593",
+    "copyrightInUs": false,
+    "title": "History of Tom Jones, a Foundling",
+    "bookId": "243b8da8-403b-517a-b860-7ccca150aa14",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 26563,
+    "url": "https://www.gutenberg.org/ebooks/26563",
+    "copyrightInUs": false,
+    "title": "The Crack of Doom",
+    "bookId": "fad4fb6f-47db-5c57-a78d-83f3fc774d80",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 74,
+    "url": "https://www.gutenberg.org/ebooks/74",
+    "copyrightInUs": false,
+    "title": "The Adventures of Tom Sawyer, Complete",
+    "bookId": "e5d8a333-b236-5348-ba8e-1cbb56e6c2f1",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 28054,
+    "url": "https://www.gutenberg.org/ebooks/28054",
+    "copyrightInUs": false,
+    "title": "The Brothers Karamazov",
+    "bookId": "6d3b1b24-c901-5230-9c98-363e538d92d9",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 4085,
+    "url": "https://www.gutenberg.org/ebooks/4085",
+    "copyrightInUs": false,
+    "title": "The Adventures of Roderick Random",
+    "bookId": "96d4b70c-6925-512f-b606-8665b40dffad",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 23,
+    "url": "https://www.gutenberg.org/ebooks/23",
+    "copyrightInUs": false,
+    "title": "Narrative of the Life of Frederick Douglass, an American Slave",
+    "bookId": "cc399e03-e7a5-5df7-8bd9-3f5d1a579687",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 47530,
+    "url": "https://www.gutenberg.org/ebooks/47530",
+    "copyrightInUs": false,
+    "title": "Oliver Twist, Vol. 2 (of 3)",
+    "bookId": "635b2be9-6d24-5122-8307-199ef5bc76c4",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 9473,
+    "url": "https://www.gutenberg.org/ebooks/9473",
+    "copyrightInUs": false,
+    "title": "The Knights of the Cross, or, Krzyzacy: Historical Romance",
+    "bookId": "aff0a228-8465-5f22-93ee-42795d5aa033",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 9911,
+    "url": "https://www.gutenberg.org/ebooks/9911",
+    "copyrightInUs": false,
+    "title": "The Torrents of Spring",
+    "bookId": "a6ce1cc9-27b1-58d3-b0a8-e914c203205a",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 40284,
+    "url": "https://www.gutenberg.org/ebooks/40284",
+    "copyrightInUs": false,
+    "title": "The Sex Life of the Gods",
+    "bookId": "48608f4a-f50d-5302-9fa5-7e5e30e8ad76",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 27475,
+    "url": "https://www.gutenberg.org/ebooks/27475",
+    "copyrightInUs": false,
+    "title": "That Girl Montana",
+    "bookId": "f69b281c-cb92-595d-8a78-2cee4c2042fa",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 27997,
+    "url": "https://www.gutenberg.org/ebooks/27997",
+    "copyrightInUs": false,
+    "title": "Robert Orange: Being a Continuation of the History of Robert Orange",
+    "bookId": "2fe4a014-8817-55ee-baeb-432fb4ba6598",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 28780,
+    "url": "https://www.gutenberg.org/ebooks/28780",
+    "copyrightInUs": false,
+    "title": "Peter the Brazen: A Mystery Story of Modern China",
+    "bookId": "5cddf557-4920-5a7f-813f-41e990020cd4",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 14244,
+    "url": "https://www.gutenberg.org/ebooks/14244",
+    "copyrightInUs": false,
+    "title": "The Romance of Tristan and Iseult",
+    "bookId": "c4c79f02-62a4-544c-89b0-8bfb75efafc7",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 59828,
+    "url": "https://www.gutenberg.org/ebooks/59828",
+    "copyrightInUs": false,
+    "title": "The String of Pearls; Or, The Barber of Fleet Street. A Domestic Romance.",
+    "bookId": "11f6d41d-7a9e-5d66-9b44-542aaf32ed3c",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 31469,
+    "url": "https://www.gutenberg.org/ebooks/31469",
+    "copyrightInUs": false,
+    "title": "The Shunned House",
+    "bookId": "c220ddb5-a0cc-5abc-820c-f1cf082f4f79",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 30849,
+    "url": "https://www.gutenberg.org/ebooks/30849",
+    "copyrightInUs": false,
+    "title": "The Works of Robert Louis Stevenson - Swanston Edition, Vol. 20",
+    "bookId": "841529d4-f84b-5f0b-b371-a4d43d205c17",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 30434,
+    "url": "https://www.gutenberg.org/ebooks/30434",
+    "copyrightInUs": false,
+    "title": "Occasion ... for Disaster",
+    "bookId": "761bceb4-5e2e-5ae2-89df-c2dc5dace962",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 30340,
+    "url": "https://www.gutenberg.org/ebooks/30340",
+    "copyrightInUs": false,
+    "title": "The Passionate Friends",
+    "bookId": "2ff23e9a-0554-520e-a9d3-6241c790e953",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 15381,
+    "url": "https://www.gutenberg.org/ebooks/15381",
+    "copyrightInUs": false,
+    "title": "Victorian Short Stories: Stories of Courtship",
+    "bookId": "5689bb4c-de93-587b-b52d-c0fd4a390f70",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 17460,
+    "url": "https://www.gutenberg.org/ebooks/17460",
+    "copyrightInUs": false,
+    "title": "Lorna Doone: A Romance of Exmoor",
+    "bookId": "433ac01b-9eaa-55db-bc97-883cd3a225a5",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 18459,
+    "url": "https://www.gutenberg.org/ebooks/18459",
+    "copyrightInUs": false,
+    "title": "Hypnerotomachia: The Strife of Loue in a Dreame",
+    "bookId": "0a4af9db-8da0-5934-988c-71ebc35d096d",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 3296,
+    "url": "https://www.gutenberg.org/ebooks/3296",
+    "copyrightInUs": false,
+    "title": "The Confessions of St. Augustine",
+    "bookId": "abea46f9-70c6-5d16-b0bd-c6abe440e96d",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 1400,
+    "url": "https://www.gutenberg.org/ebooks/1400",
+    "copyrightInUs": false,
+    "title": "Great Expectations",
+    "bookId": "7b099fd3-fa4f-5b54-9cb3-6829a7f3c6c4",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 38983,
+    "url": "https://www.gutenberg.org/ebooks/38983",
+    "copyrightInUs": false,
+    "title": "The Camp Fire Girls Solve a Mystery; Or, The Christmas Adventure at Carver House",
+    "bookId": "189f1182-617f-52cb-b46b-684a8f45b037",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 2591,
+    "url": "https://www.gutenberg.org/ebooks/2591",
+    "copyrightInUs": false,
+    "title": "Grimms' Fairy Tales",
+    "bookId": "80d76884-cc39-5982-a161-68082a0f397a",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 1080,
+    "url": "https://www.gutenberg.org/ebooks/1080",
+    "copyrightInUs": false,
+    "title": "A Modest Proposal: For preventing the children of poor people in Ireland, from being a burden on their parents or country, and for making them beneficial to the publick",
+    "bookId": "a330ac21-76cf-5f38-9872-04f5a1ef332a",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 78033,
+    "url": "https://www.gutenberg.org/ebooks/78033",
+    "copyrightInUs": false,
+    "title": "The silent Baltic : $b or, Detained near Kiel",
+    "bookId": "e8f8261c-75ae-5fe9-9a7e-f3e567fb1076",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 18875,
+    "url": "https://www.gutenberg.org/ebooks/18875",
+    "copyrightInUs": false,
+    "title": "The Prairie Wife",
+    "bookId": "07e07ce9-0ae0-58b5-b258-74b97c5f7381",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 244,
+    "url": "https://www.gutenberg.org/ebooks/244",
+    "copyrightInUs": false,
+    "title": "A Study in Scarlet",
+    "bookId": "26d44df5-ea42-5f31-b7bd-605c8669b45c",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 3207,
+    "url": "https://www.gutenberg.org/ebooks/3207",
+    "copyrightInUs": false,
+    "title": "Leviathan",
+    "bookId": "d9e12a13-dd1d-5ed5-bde0-d892d467a603",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 40361,
+    "url": "https://www.gutenberg.org/ebooks/40361",
+    "copyrightInUs": false,
+    "title": "The Air Pirate",
+    "bookId": "121e0804-270b-531a-a447-eefb1bcd19d5",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 11030,
+    "url": "https://www.gutenberg.org/ebooks/11030",
+    "copyrightInUs": false,
+    "title": "Incidents in the Life of a Slave Girl, Written by Herself",
+    "bookId": "b27d861d-34c7-5e9a-861b-7d3ebbc85e5f",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 76,
+    "url": "https://www.gutenberg.org/ebooks/76",
+    "copyrightInUs": false,
+    "title": "Adventures of Huckleberry Finn",
+    "bookId": "4bfc28ce-724a-563c-8009-c1d09936ec40",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 51252,
+    "url": "https://www.gutenberg.org/ebooks/51252",
+    "copyrightInUs": false,
+    "title": "The Book of the Thousand Nights and a Night — Volume 01 (of 10)",
+    "bookId": "65014be6-041f-512d-a31d-a10c0146049a",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 20203,
+    "url": "https://www.gutenberg.org/ebooks/20203",
+    "copyrightInUs": false,
+    "title": "Autobiography of Benjamin Franklin",
+    "bookId": "1e53e97a-9e5a-50a2-afff-6ba41f6a2e86",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 768,
+    "url": "https://www.gutenberg.org/ebooks/768",
+    "copyrightInUs": false,
+    "title": "Wuthering Heights",
+    "bookId": "04acbb3e-ebd9-521a-8d5a-f07402b4b9a3",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 34413,
+    "url": "https://www.gutenberg.org/ebooks/34413",
+    "copyrightInUs": false,
+    "title": "The Love Letters of Mary Wollstonecraft to Gilbert Imlay",
+    "bookId": "32df87d2-a7d5-5428-8214-176d2d533680",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 10148,
+    "url": "https://www.gutenberg.org/ebooks/10148",
+    "copyrightInUs": false,
+    "title": "The Merry Adventures of Robin Hood",
+    "bookId": "89da49a2-36af-5532-a1e3-a02f83f9542b",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 19771,
+    "url": "https://www.gutenberg.org/ebooks/19771",
+    "copyrightInUs": false,
+    "title": "Henrietta Temple: A Love Story",
+    "bookId": "9405b300-55e1-58f6-8b79-3e138f0bc048",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  },
+  {
+    "gutenbergId": 19146,
+    "url": "https://www.gutenberg.org/ebooks/19146",
+    "copyrightInUs": false,
+    "title": "The Entailed Hat; Or, Patty Cannon's Times",
+    "bookId": "013dac18-7cbb-59ee-8569-bbc1995d5e4a",
+    "source": "Project Gutenberg; catalog eligibility from Gutendex copyright=false"
+  }
+]
