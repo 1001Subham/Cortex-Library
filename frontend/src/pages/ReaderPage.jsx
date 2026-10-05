@@ -11,6 +11,7 @@ import {
   getBook,
   getBookContent,
   getBookProgress,
+  recordReadingVisualCue,
   heartbeatReadingSession,
   issueBook,
   saveBookProgress,
@@ -30,6 +31,7 @@ const SAVE_DELTA = 1;
 const SESSION_FLUSH_MS = 25000;
 const MAX_FLUSH_SECONDS = 60;
 const IDLE_MS = 45000;
+const VISUAL_CUE_INTERVAL_MS = 15000;
 
 function isWindowFocused() {
   return document.visibilityState === 'visible' && document.hasFocus();
@@ -50,6 +52,10 @@ function ReaderPage({ bookId }) {
   const [resumeFrom, setResumeFrom] = useState(null);
   const [sessionError, setSessionError] = useState(null);
   const [progressError, setProgressError] = useState(null);
+  const [visualCueState, setVisualCueState] = useState('off');
+  const [visualCueError, setVisualCueError] = useState(null);
+  const [visualCueSummary, setVisualCueSummary] = useState(null);
+  const [activeSessionId, setActiveSessionId] = useState(null);
 
   const restoredRef = useRef(false);
   const lastSavedRef = useRef(null);
@@ -62,6 +68,117 @@ function ReaderPage({ bookId }) {
   const pendingElapsedRef = useRef(0);
   const sessionReadyRef = useRef(false);
   const flushSessionRef = useRef(async () => {});
+  const sessionIdRef = useRef(null);
+  const cameraVideoRef = useRef(null);
+  const cameraStreamRef = useRef(null);
+  const cameraTimerRef = useRef(null);
+  const cameraSamplePendingRef = useRef(false);
+
+  const stopVisualCueCapture = useCallback(() => {
+    if (cameraTimerRef.current) {
+      window.clearInterval(cameraTimerRef.current);
+      cameraTimerRef.current = null;
+    }
+    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    cameraStreamRef.current = null;
+    if (cameraVideoRef.current) {
+      cameraVideoRef.current.srcObject = null;
+    }
+    setVisualCueState((current) => (current === 'active' ? 'off' : current));
+  }, []);
+
+  const sampleVisualCue = useCallback(async () => {
+    const video = cameraVideoRef.current;
+    const sessionId = sessionIdRef.current;
+    if (
+      !video ||
+      !sessionId ||
+      video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+      document.visibilityState !== 'visible' ||
+      !document.hasFocus() ||
+      cameraSamplePendingRef.current
+    ) {
+      return;
+    }
+
+    cameraSamplePendingRef.current = true;
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 320;
+      canvas.height = 240;
+      const context = canvas.getContext('2d', { alpha: false });
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise((resolve) =>
+        canvas.toBlob(resolve, 'image/jpeg', 0.65)
+      );
+      if (!blob) throw new Error('Unable to prepare a camera sample.');
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Unable to read camera sample.'));
+        reader.readAsDataURL(blob);
+      });
+      const frame = String(dataUrl).split(',')[1];
+      const result = await recordReadingVisualCue(bookId, sessionId, frame);
+      setVisualCueSummary(result.summary);
+      setVisualCueError(null);
+    } catch (err) {
+      const message = err.message || 'Visual cue analysis is unavailable.';
+      setVisualCueError(message);
+      console.error('[reader] Visual cue sample failed.', err);
+      stopVisualCueCapture();
+      setVisualCueState('error');
+    } finally {
+      cameraSamplePendingRef.current = false;
+    }
+  }, [bookId, stopVisualCueCapture]);
+
+  const startVisualCueCapture = useCallback(async () => {
+    setVisualCueError(null);
+    setVisualCueSummary(null);
+    setVisualCueState('starting');
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('This browser does not provide camera access.');
+      }
+      if (!sessionIdRef.current) {
+        throw new Error('The active reading session is not ready yet.');
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: 'user' },
+        audio: false,
+      });
+      cameraStreamRef.current = stream;
+      const video = cameraVideoRef.current;
+      video.srcObject = stream;
+      await video.play();
+      setVisualCueState('active');
+      await sampleVisualCue();
+      cameraTimerRef.current = window.setInterval(
+        sampleVisualCue,
+        VISUAL_CUE_INTERVAL_MS
+      );
+    } catch (err) {
+      stopVisualCueCapture();
+      const message = err.message || 'Camera permission was not granted.';
+      setVisualCueError(message);
+      setVisualCueState('error');
+      console.error('[reader] Unable to start visual cue capture.', err);
+    }
+  }, [sampleVisualCue, stopVisualCueCapture]);
+
+  useEffect(() => {
+    function stopWhenHidden() {
+      if (document.visibilityState !== 'visible') stopVisualCueCapture();
+    }
+    document.addEventListener('visibilitychange', stopWhenHidden);
+    window.addEventListener('blur', stopVisualCueCapture);
+    return () => {
+      document.removeEventListener('visibilitychange', stopWhenHidden);
+      window.removeEventListener('blur', stopVisualCueCapture);
+      stopVisualCueCapture();
+    };
+  }, [stopVisualCueCapture]);
 
   const readableHtml = useMemo(() => extractReadableHtml(html), [html]);
 
@@ -375,6 +492,8 @@ function ReaderPage({ bookId }) {
     let cancelled = false;
     let flushChain = Promise.resolve();
     sessionReadyRef.current = false;
+    sessionIdRef.current = null;
+    setActiveSessionId(null);
     pendingElapsedRef.current = 0;
     lastActivityAtRef.current = Date.now();
     lastActiveAtRef.current = isWindowFocused() ? Date.now() : null;
@@ -417,7 +536,12 @@ function ReaderPage({ bookId }) {
       }
 
       try {
-        await startReadingSession(bookId);
+        const result = await startReadingSession(bookId);
+        if (!result.session?.id) {
+          throw new Error('The reading session response did not include an id.');
+        }
+        sessionIdRef.current = result.session.id;
+        setActiveSessionId(result.session.id);
         sessionReadyRef.current = true;
         setSessionError(null);
         return true;
@@ -558,9 +682,10 @@ function ReaderPage({ bookId }) {
       window.clearInterval(interval);
       persistElapsed(true, { keepalive: true });
       cancelled = true;
+      stopVisualCueCapture();
       flushSessionRef.current = async () => {};
     };
-  }, [bookId, readableHtml, user]);
+  }, [bookId, readableHtml, stopVisualCueCapture, user]);
 
   useEffect(() => {
     if (!readableHtml || !user) {
@@ -677,6 +802,47 @@ function ReaderPage({ bookId }) {
               reading position will continue to update.
             </p>
           </div>
+        )}
+
+        {readableHtml && user && !loading && (
+          <section className="reader__visual-cues" aria-label="Optional visual reading cues">
+            <video
+              ref={cameraVideoRef}
+              autoPlay
+              muted
+              playsInline
+              aria-hidden="true"
+              className="reader__camera-source"
+            />
+            <div>
+              <p className="eyebrow">Optional camera analysis</p>
+              <p>
+                Estimates whether your face is visible and generally facing the screen.
+                It cannot tell whether you understand, enjoy, or focus on the book.
+                Camera frames are sent transiently for analysis and are not saved.
+              </p>
+              {visualCueSummary && (
+                <p aria-live="polite">
+                  {visualCueSummary.samples} samples · {visualCueSummary.faceDetected} with a face visible · {visualCueSummary.facingForward} generally facing forward
+                </p>
+              )}
+              {visualCueError && <p role="alert">Camera analysis: {visualCueError}</p>}
+            </div>
+            {visualCueState === 'active' ? (
+              <button type="button" className="button button--ghost" onClick={stopVisualCueCapture}>
+                Turn off camera analysis
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="button button--ghost"
+                onClick={startVisualCueCapture}
+                disabled={visualCueState === 'starting' || !activeSessionId}
+              >
+                {visualCueState === 'starting' ? 'Starting camera…' : 'Enable visual cues'}
+              </button>
+            )}
+          </section>
         )}
 
         {error && (

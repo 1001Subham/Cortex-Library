@@ -2,9 +2,9 @@
 
 **Jira:** CORTEX-6 (US-01: Browse Digital Library) / CORTEX-10 (Design Digital Book Catalog Interface)
 
-**Status:** Catalog schema migrated. Users support email/password and Google OAuth (`google_sub`, nullable `password_hash`) plus an optional `display_name` for the reader profile. Book issues, token wallets, token ledger, reading progress, and reading sessions migrated. Development seed data applied (10 complete US public-domain works as HTML). Catalog, content, auth, issuing, library, token, reader analytics, profile, reading-progress, reading-session, and personalized recommendations APIs implemented. Recommendations are computed from the current authenticated reader's existing history; there is no recommendation table or attention storage.
+**Status:** Catalog schema migrated. Users support email/password and Google OAuth (`google_sub`, nullable `password_hash`) plus an optional `display_name` for the reader profile. Book issues, token wallets, token ledger, reading progress, reading sessions, and visual-cue aggregates migrated. The catalog contains 100 US public-domain works with local HTML and covers. Catalog, content, auth, issuing, library, token, reader analytics, profile, reading-progress, reading-session, personalized recommendation, and visual-cue APIs implemented. Recommendations are computed from the current authenticated reader's existing history; there is no recommendation table or raw-camera storage.
 
-**Scope:** Catalog metadata, internal content references, authenticated users, book issues, token wallets/ledger, saved HTML scroll progress, measured active reading sessions, and deterministic content-based recommendations. Attention, XP/levels, and premium pricing remain out of scope.
+**Scope:** Catalog metadata, internal content references, authenticated users, book issues, token wallets/ledger, saved HTML scroll progress, measured active reading sessions, deterministic content-based recommendations, and per-session aggregates of opt-in face-visibility/head-direction cues. XP/levels and premium pricing remain out of scope.
 
 ---
 
@@ -23,8 +23,9 @@
 | `token_transactions` | Ledger of token credits and debits (welcome, issues, future rewards). |
 | `reading_progress` | One saved HTML scroll position per user and book (0–100%). |
 | `reading_sessions` | Measured active reading time per user and book (open or closed intervals). |
+| `reading_attention` | Aggregate counts of opt-in face visibility and approximate head direction per reading session; camera frames are not persisted. |
 
-Not created in this phase: `attention_measurements`, `recommendations`, XP/level tables.
+Not created in this phase: raw `attention_measurements`, `recommendations`, XP/level tables.
 
 ---
 
@@ -166,6 +167,22 @@ Unique `(user_id, book_id)`. GET/PUT require an active `book_issues` row for tha
 
 Partial unique index: at most one open session (`ended_at IS NULL`) per `(user_id, book_id)`. Duration is client-reported elapsed active seconds, capped at 60 per request, added only to the open row. Duplicate stop does not add time to an already-closed session. This is not catalog `estimated_reading_minutes` and is not attention.
 
+### `reading_attention`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `session_id` | UUID PRIMARY KEY | FK → `reading_sessions`; one aggregate per session |
+| `user_id` | UUID NOT NULL | FK → `users`; comes from the authenticated request |
+| `book_id` | UUID NOT NULL | FK → `books` |
+| `sample_count` | INTEGER NOT NULL | Successfully analyzed frames |
+| `face_detected_count` | INTEGER NOT NULL | Frames where a face was visible |
+| `forward_facing_count` | INTEGER NOT NULL | Approximate head direction within configured pose thresholds |
+| `turned_away_count` | INTEGER NOT NULL | Approximate head direction outside those thresholds |
+| `no_face_count` | INTEGER NOT NULL | Frames with no face detected |
+| `created_at`, `updated_at` | TIMESTAMPTZ NOT NULL | Aggregate timestamps |
+
+The backend updates counts only after analysis while the session and issue are active. The raw JPEG exists only in request memory during analysis; it is not written to logs, files, or PostgreSQL. These cues do not measure attention, comprehension, emotion, or engagement.
+
 ### `user_token_wallets`
 
 | Column | Type | Notes |
@@ -203,6 +220,7 @@ users ──► user_token_wallets   (1:1)
 users ──► token_transactions   (1:N)
 users ──► reading_progress ──► books  (1 per user+book)
 users ──► reading_sessions ──► books  (N per user+book; one open)
+users ──► reading_attention ──► reading_sessions (0/1 aggregate per session)
 ```
 
 - One book, many authors; one author, many books.
@@ -228,6 +246,7 @@ users ──► reading_sessions ──► books  (N per user+book; one open)
 | `token_transactions` | `id` (UUID) |
 | `reading_progress` | `id` (UUID) |
 | `reading_sessions` | `id` (UUID) |
+| `reading_attention` | `session_id` (UUID) |
 
 ---
 
@@ -248,6 +267,9 @@ users ──► reading_sessions ──► books  (N per user+book; one open)
 | `reading_progress` | `book_id` | `books(id)` | `ON DELETE RESTRICT` |
 | `reading_sessions` | `user_id` | `users(id)` | `ON DELETE CASCADE` |
 | `reading_sessions` | `book_id` | `books(id)` | `ON DELETE RESTRICT` |
+| `reading_attention` | `session_id` | `reading_sessions(id)` | `ON DELETE CASCADE` |
+| `reading_attention` | `user_id` | `users(id)` | `ON DELETE CASCADE` |
+| `reading_attention` | `book_id` | `books(id)` | `ON DELETE RESTRICT` |
 
 ---
 
@@ -286,6 +308,7 @@ users ──► reading_sessions ──► books  (N per user+book; one open)
 - `reading_progress.progress_percent` between 0 and 100
 - `reading_sessions.duration_seconds >= 0`
 - `reading_sessions.ended_at` NULL or `>= started_at`
+- `reading_attention` counts are nonnegative; face-direction counts do not exceed detected-face counts, and categorized counts do not exceed all samples
 - `book_issues.status` IN (`active`, `returned`, `expired`)
 - `book_issues.due_at > issued_at`
 - `user_token_wallets.balance >= 0`
@@ -327,6 +350,7 @@ users ──► reading_sessions ──► books  (N per user+book; one open)
 - `reading_progress(user_id, updated_at DESC)`
 - `reading_sessions(book_id)`
 - `reading_sessions(user_id, started_at DESC)`
+- `reading_attention(user_id, updated_at DESC)`
 
 **Not in first migration**
 
@@ -370,6 +394,7 @@ users ──► reading_sessions ──► books  (N per user+book; one open)
 | In-app reader | `content_storage_key`, `content_format`, `total_pages` |
 | Resume / progress | `reading_progress(user_id, book_id, progress_percent)` — HTML scroll percent |
 | Measured reading time | `reading_sessions` duration accumulated from visible reader time |
+| Visual reading cues | `reading_attention` stores per-session aggregates only; raw camera frames are not retained |
 | Book issues / tokens | `book_issues`, `user_token_wallets`, `token_transactions` |
 | XP / level rewards | Reuse `token_transactions.transaction_type = 'level_reward'` |
 | Premium issue cost | Application config / later book flags; wallet schema unchanged |
@@ -397,6 +422,7 @@ Applied to local Docker PostgreSQL (forward-only CREATE):
 11. `011_add_user_display_name.sql`
 12. `012_create_reading_progress.sql`
 13. `013_create_reading_sessions.sql`
+14. `014_create_reading_attention.sql`
 
 Development seed (idempotent): `database/seeds/001_catalog_seed.sql`
 
@@ -404,4 +430,4 @@ Development seed (idempotent): `database/seeds/001_catalog_seed.sql`
 
 ## Implementation note
 
-Catalog tables exist and contain development seed data (10 published books with complete public-domain HTML). Browse APIs: `GET /api/books` and `GET /api/books/:id` (public). Content API: `GET /api/books/:id/content` requires a Cortex JWT and an active issue for that book. Catalog UI is public; in-app HTML reader is gated. `users` supports email/password, Google OAuth, and optional `display_name`. Authenticated issuing charges tokens atomically; My Library lists and returns issues without refunding tokens. `GET /api/analytics` aggregates the authenticated user's issues, `reading_progress`, measured `reading_sessions` time, and token spends; it does not read attention tables because those tables do not exist. Reader profile uses `GET /api/auth/me`, `GET /api/auth/profile`, and `PUT /api/auth/profile`. Reading progress uses `GET /api/books/:id/progress` and `PUT /api/books/:id/progress` (`reading_progress.progress_percent`). Reading time uses `POST /api/books/:id/reading-sessions/start|heartbeat|stop`.
+Catalog tables contain 100 published public-domain works with local HTML. Browse APIs: `GET /api/books` and `GET /api/books/:id` (public). Content API: `GET /api/books/:id/content` requires a Cortex JWT and an active issue for that book. Catalog UI is public; in-app HTML reader is gated. `users` supports email/password, Google OAuth, and optional `display_name`. Authenticated issuing charges tokens atomically; My Library lists and returns issues without refunding tokens. `GET /api/analytics` aggregates the authenticated user's issues, `reading_progress`, measured `reading_sessions` time, per-session visual-cue aggregates, and token spends. Reader profile uses `GET /api/auth/me`, `GET /api/auth/profile`, and `PUT /api/auth/profile`. Reading progress uses `GET /api/books/:id/progress` and `PUT /api/books/:id/progress` (`reading_progress.progress_percent`). Reading time uses `POST /api/books/:id/reading-sessions/start|heartbeat|stop`. Optional visual cues use authenticated `POST/GET /api/books/:id/reading-sessions/:sessionId/visual-cues`; the backend forwards a transient image to the internal token-protected ML endpoint and stores only aggregate counts.

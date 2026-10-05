@@ -213,8 +213,8 @@ Never:
 
 11. Do not introduce DeepFace or emotion classification.
 
-12. The attention engine measures visual attention/engagement signals,
-not a person's true emotional or psychological state.
+12. Visual reading cues only estimate face visibility and coarse head
+orientation; they do not measure attention, engagement, or psychology.
 
 13. The user's camera feed must remain hidden from the reader.
 
@@ -328,7 +328,7 @@ PROJECT_CONTEXT.md
 
 Last updated: 2026-10-05
 
-PHASE: Personalized book recommendations (CORTEX-22)
+PHASE: Reading attention analysis (CORTEX-23)
 
 JIRA:
 - CORTEX-6 — US-01: Browse Digital Library (API and frontend catalog implemented)
@@ -342,6 +342,7 @@ JIRA:
 - CORTEX-21 — US-05: Save reading progress (`GET/PUT /api/books/:id/progress`, HTML scroll percent)
 - CORTEX-19 — reading analytics now joins `reading_progress` and `reading_sessions` for the authenticated user
 - CORTEX-22 — deterministic, explainable recommendations from the authenticated user's own issue history, progress, sessions, categories, and authors (`GET /api/recommendations`, `#/recommendations`)
+- CORTEX-23 — opt-in MediaPipe/OpenCV face-visibility and approximate head-direction cues; ephemeral frames and per-session aggregate counts only
 
 COMPLETED:
 - Root monorepo structure (frontend, backend, ml-service, database, docs)
@@ -423,7 +424,8 @@ DATABASE DESIGN (CORTEX-10, migrated 2026-08-29):
   - database/migrations/011_add_user_display_name.sql
   - database/migrations/012_create_reading_progress.sql
   - database/migrations/013_create_reading_sessions.sql
-- Entities created: categories, authors, books, book_authors, book_categories, users, book_issues, user_token_wallets, token_transactions, reading_progress, reading_sessions
+  - database/migrations/014_create_reading_attention.sql
+- Entities created: categories, authors, books, book_authors, book_categories, users, book_issues, user_token_wallets, token_transactions, reading_progress, reading_sessions, reading_attention
 - books M:N categories via book_categories (no books.primary_category_id)
 - categories.parent_id for hierarchical taxonomy; no separate genres table
 - language_code VARCHAR(10)
@@ -553,7 +555,7 @@ READER ANALYTICS API (CORTEX-19, 2026-10-03):
 - `readingProgress` joins `reading_progress` on `(user_id, book_id)`: booksStarted, booksCompleted, averageProgressPercent, per-book progress and measured seconds
 - `readingTime` sums `reading_sessions.duration_seconds`: totalSeconds, totalMinutes, recentSessions
 - Catalog minutes/pages are labeled as catalog estimates, not measured reading time
-- `unavailable.attention` explains that attention is not stored; progress and sessions are available
+- `unavailable.attention` explains when optional visual-cue samples are unavailable; progress and sessions remain separately reported
 - Does not fabricate session, progress, or attention scores
 - Reader reports session startup, heartbeat, and progress load/save failures in an alert and logs the underlying error to the browser console
 - Tests: `backend/src/analytics.api.test.js`, `backend/src/readingSessions.api.test.js`
@@ -587,6 +589,16 @@ READING SESSION API (2026-10-03):
 - Duration is accumulated active seconds from the reader, not wall-clock time the tab was merely open
 - Tests: `backend/src/readingSessions.api.test.js`
 
+VISUAL READING CUES (CORTEX-23, 2026-10-05):
+- CPU MediaPipe Face Mesh with OpenCV image decoding estimates face visibility and coarse head orientation; there is no person recognition, emotion inference, or DeepFace. MediaPipe's bundled CPU runtime uses TFLite; no TensorFlow Python package is installed directly.
+- Reader camera use is opt-in through a user click and browser permission. A hidden video element is sampled every 15 seconds only while the reader tab is visible and focused.
+- The camera is stopped when the reader is hidden, blurred, or left. Small JPEG frames are sent through the authenticated backend to the internal ML service; they are never written to storage, logs, or PostgreSQL.
+- Authenticated `POST/GET /api/books/:id/reading-sessions/:sessionId/visual-cues`; session ownership comes from `req.user.id`, and recording requires the session and issue to remain active.
+- Backend authenticates to `POST http://ml-service:8000/analyze/frame` with `ML_SERVICE_TOKEN`; the ML route requires the shared internal token.
+- `reading_attention` stores per-session counts only: sample count, face detected, approximate forward-facing, turned-away, and no-face. `GET /api/analytics` aggregates only the authenticated user's counts.
+- These visual cues do not establish attention, understanding, emotion, or engagement. Screen-facing/head pose is only an approximate visual proxy.
+- Tests: `backend/src/readingAttention.api.test.js` and `ml-service/tests/test_visual_cues.py`.
+
 PERSONALIZED RECOMMENDATIONS API (CORTEX-22, 2026-10-05):
 - Authenticated `GET /api/recommendations`; derives user identity only from `req.user.id`
 - Uses only the current user's issued-book history, saved progress, and measured session seconds plus catalog categories/authors
@@ -617,13 +629,12 @@ BOOK CONTENT STRATEGY:
 NOT YET IMPLEMENTED:
 - XP, levels, and level-up token rewards
 - Premium vs standard book token pricing
-- Attention engine and camera capture
-- Persistent engagement/attention storage (analytics reports unavailability instead of inventing scores)
+- Calibrated measures of actual attention or engagement (the current cues do not claim these)
 - Payments
 - Google GIS is inlined at frontend image build. Docker Compose passes `VITE_GOOGLE_CLIENT_ID` (falling back to `GOOGLE_CLIENT_ID`) as a build arg. The frontend image does not receive `GOOGLE_CLIENT_SECRET`. After changing the client ID, rebuild the frontend image (`docker compose build frontend`).
 
 NEXT RECOMMENDED PHASE:
-Choose the next Jira story from the project backlog. CORTEX-22 uses a deterministic content-based ranker and does not infer attention, emotion, or sentiment. Token ledger already accepts a future `level_reward` type; issue cost stays centralized so premium pricing can be added later without changing the wallet schema.
+Next work should be selected from the Jira backlog after CORTEX-23 verification. Recommendations remain deterministic and content-based; they do not infer attention, emotion, or sentiment. Token ledger already accepts a future `level_reward` type; issue cost stays centralized so premium pricing can be added later without changing the wallet schema.
 
 ==================================================
 20. KNOWN ISSUES
@@ -654,5 +665,5 @@ DATABASE OPERATIONS (operational guidance — not a current defect):
 
 - XP / levels / reading-time rewards credited as `level_reward`
 - Premium book classification and higher issue costs
-- Attention engine integration (OpenCV, MediaPipe)
+- Evaluate cue calibration, device compatibility, and privacy/accessibility implications before using visual cues for additional personalization
 - Personalized recommendations

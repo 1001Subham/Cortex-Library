@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "node --test src/books.api.test.js && node --test src/auth.api.test.js && node --test src/library.api.test.js && node --test src/tokens.api.test.js && node --test src/analytics.api.test.js && node --test src/progress.api.test.js && node --test src/readingSessions.api.test.js && node --test src/recommendations.api.test.js && node --test src/gutenbergCatalogImport.api.test.js && node --test src/gutenbergCatalogImportRunner.test.js && node --test src/gutenbergCover.service.test.js"
+    "test": "node --test src/books.api.test.js && node --test src/auth.api.test.js && node --test src/library.api.test.js && node --test src/tokens.api.test.js && node --test src/analytics.api.test.js && node --test src/progress.api.test.js && node --test src/readingSessions.api.test.js && node --test src/readingAttention.api.test.js && node --test src/recommendations.api.test.js && node --test src/gutenbergCatalogImport.api.test.js && node --test src/gutenbergCatalogImportRunner.test.js && node --test src/gutenbergCover.service.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

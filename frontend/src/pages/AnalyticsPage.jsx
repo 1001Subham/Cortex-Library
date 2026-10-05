@@ -386,15 +386,22 @@ function AnalyticsPage() {
       )}
 
       {!loading && !error && data && (
-        <section className="analytics-panel analytics-panel--muted">
-          <h2>Not measured yet</h2>
-          <ul className="analytics-unavailable">
-            <li>
-              <strong>Attention and engagement.</strong>{' '}
-              {data.unavailable?.attention?.reason ||
-                'Attention and engagement measurements are not stored yet.'}
-            </li>
-          </ul>
+        <section className="analytics-panel" aria-label="Camera visual cues">
+          <h2>Optional camera visual cues</h2>
+          {data.visualCues?.available ? (
+            <>
+              <ul className="analytics-unavailable">
+                <li>{data.visualCues.sessionsMeasured} reading sessions sampled across {data.visualCues.samples} frames.</li>
+                <li>{data.visualCues.faceDetected} samples with a face visible; {data.visualCues.noFaceDetected} with no face detected.</li>
+                <li>{data.visualCues.facingForward} generally forward-facing samples; {data.visualCues.turnedAway} turned-away samples.</li>
+              </ul>
+              <p className="analytics-note">{data.visualCues.note} Raw camera frames are not retained.</p>
+            </>
+          ) : (
+            <p className="analytics-note">
+              No optional camera samples are recorded. Enable visual cues in the Reader to collect per-session face visibility and approximate head-direction signals.
+            </p>
+          )}
         </section>
       )}
     </main>

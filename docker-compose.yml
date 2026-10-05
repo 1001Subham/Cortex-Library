@@ -35,6 +35,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-cortex_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_local_env}
       ML_SERVICE_URL: http://ml-service:8000
+      ML_SERVICE_TOKEN: ${ML_SERVICE_TOKEN:-change_me_ml_service_token_in_local_env}
       CORS_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
       BOOK_STORAGE_ROOT: /storage
       JWT_SECRET: ${JWT_SECRET:-change_me_jwt_secret_in_local_env}
@@ -67,6 +68,7 @@ services:
     environment:
       PORT: 8000
       ENV: ${NODE_ENV:-development}
+      ML_SERVICE_TOKEN: ${ML_SERVICE_TOKEN:-change_me_ml_service_token_in_local_env}
     volumes:
       - ./ml-service:/app
     healthcheck:

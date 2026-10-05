@@ -12,6 +12,7 @@ import {
   listRecentlyReturnedForUser,
   listRecentSessionsForUser,
 } from '../repositories/analytics.repository.js';
+import { findVisualCueAggregateForUser } from '../repositories/readingAttention.repository.js';
 
 const LIST_LIMIT = 8;
 
@@ -68,6 +69,7 @@ export async function getReaderAnalytics(userId) {
     progressBooks,
     totalReadingSeconds,
     recentSessions,
+    visualCueAggregate,
   ] = await Promise.all([
     findIssueSummaryForUser(userId),
     findCatalogEstimatesForUser(userId),
@@ -80,6 +82,7 @@ export async function getReaderAnalytics(userId) {
     listReadingProgressBooksForUser(userId),
     findReadingTimeSummaryForUser(userId),
     listRecentSessionsForUser(userId, LIST_LIMIT),
+    findVisualCueAggregateForUser(userId),
   ]);
 
   const uniqueBooks = summary.unique_books_issued;
@@ -88,6 +91,17 @@ export async function getReaderAnalytics(userId) {
   const averageProgressPercent = booksStarted
     ? Math.round(Number(progressSummary.average_progress) * 100) / 100
     : 0;
+  const visualCues = {
+    available: Number(visualCueAggregate.samples) > 0,
+    sessionsMeasured: Number(visualCueAggregate.sessions),
+    samples: Number(visualCueAggregate.samples),
+    faceDetected: Number(visualCueAggregate.face_detected),
+    facingForward: Number(visualCueAggregate.forward_facing),
+    turnedAway: Number(visualCueAggregate.turned_away),
+    noFaceDetected: Number(visualCueAggregate.no_face_detected),
+    lastSampledAt: visualCueAggregate.last_sampled_at,
+    note: 'These are camera-based face visibility and approximate head-direction cues, not a measure of attention, understanding, emotion, or engagement.',
+  };
 
   return {
     hasIssueHistory,
@@ -136,6 +150,7 @@ export async function getReaderAnalytics(userId) {
         durationSeconds: Number(row.duration_seconds),
       })),
     },
+    visualCues,
     categoryBreakdown: categories.map((row) => ({
       name: row.name,
       slug: row.slug,
@@ -144,6 +159,11 @@ export async function getReaderAnalytics(userId) {
     currentlyReading: currentlyReading.map(toAnalyticsBook),
     recentlyIssued: recentlyIssued.map(toAnalyticsBook),
     recentlyReturned: recentlyReturned.map(toAnalyticsBook),
-    unavailable: UNAVAILABLE,
+    unavailable: {
+      ...UNAVAILABLE,
+      attention: visualCues.available
+        ? { available: true, reason: null }
+        : UNAVAILABLE.attention,
+    },
   };
 }

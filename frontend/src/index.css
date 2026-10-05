@@ -914,6 +914,43 @@ select {
   margin: 0 auto 1rem;
 }
 
+.reader__visual-cues {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  width: min(100% - 2rem, 70rem);
+  margin: 1.25rem auto;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface);
+}
+
+.reader__visual-cues > div {
+  max-width: 52rem;
+}
+
+.reader__visual-cues p {
+  margin: 0.25rem 0;
+}
+
+.reader__camera-source {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 680px) {
+  .reader__visual-cues {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 .reader__gate {
   width: min(520px, calc(100% - 1rem));
   margin: 2.5rem auto 0;

@@ -14,6 +14,10 @@ import {
   startReadingSessionHandler,
   stopReadingSessionHandler,
 } from '../controllers/readingSessions.controller.js';
+import {
+  getVisualCueSummaryHandler,
+  recordVisualCueHandler,
+} from '../controllers/readingAttention.controller.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 
 const router = Router();
@@ -37,6 +41,16 @@ router.post(
   '/:id/reading-sessions/stop',
   requireAuth,
   stopReadingSessionHandler
+);
+router.post(
+  '/:id/reading-sessions/:sessionId/visual-cues',
+  requireAuth,
+  recordVisualCueHandler
+);
+router.get(
+  '/:id/reading-sessions/:sessionId/visual-cues',
+  requireAuth,
+  getVisualCueSummaryHandler
 );
 router.get('/:id', getBookHandler);
 

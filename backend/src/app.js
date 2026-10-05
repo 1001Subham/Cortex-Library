@@ -7,7 +7,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 const app = express();
 
 app.use(cors({ origin: config.corsOrigin }));
-app.use(express.json());
+app.use(express.json({ limit: '512kb' }));
 
 app.use('/api', routes);
 

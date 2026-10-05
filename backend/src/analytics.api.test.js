@@ -143,6 +143,41 @@ test('GET /api/analytics returns an empty report for a user with no issues', asy
   assertNoSecretFields(body);
 });
 
+test('GET /api/analytics includes only the authenticated reader camera visual cues', async () => {
+  const owner = await registerUser('visual-cues-owner');
+  const other = await registerUser('visual-cues-other');
+  const issue = await postJson(`/api/books/${SEEDED_BOOK_ID}/issue`, {}, owner.token);
+  assert.equal(issue.status, 201);
+  const started = await postJson(
+    `/api/books/${SEEDED_BOOK_ID}/reading-sessions/start`,
+    {},
+    owner.token
+  );
+  assert.equal(started.status, 200);
+  await pool.query(
+    `INSERT INTO reading_attention
+       (user_id, book_id, session_id, sample_count, face_detected_count,
+        forward_facing_count, turned_away_count, no_face_count)
+     VALUES ($1, $2, $3, 3, 2, 1, 1, 1)`,
+    [owner.user.id, SEEDED_BOOK_ID, started.body.session.id]
+  );
+
+  const ownerReport = await getJson('/api/analytics', owner.token);
+  assert.equal(ownerReport.status, 200);
+  assert.equal(ownerReport.body.visualCues.available, true);
+  assert.equal(ownerReport.body.visualCues.sessionsMeasured, 1);
+  assert.equal(ownerReport.body.visualCues.samples, 3);
+  assert.equal(ownerReport.body.visualCues.faceDetected, 2);
+  assert.equal(ownerReport.body.visualCues.facingForward, 1);
+  assert.match(ownerReport.body.visualCues.note, /not a measure of attention/i);
+
+  const otherReport = await getJson('/api/analytics', other.token);
+  assert.equal(otherReport.status, 200);
+  assert.equal(otherReport.body.visualCues.available, false);
+  assert.equal(otherReport.body.visualCues.samples, 0);
+  assert.equal(otherReport.body.visualCues.faceDetected, 0);
+});
+
 test('GET /api/analytics summarizes only the authenticated user issues', async () => {
   const owner = await registerUser('owner');
   const other = await registerUser('other');

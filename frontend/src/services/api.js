@@ -105,6 +105,17 @@ export async function startReadingSession(id) {
   });
 }
 
+export async function recordReadingVisualCue(id, sessionId, frame) {
+  return request(`/api/books/${id}/reading-sessions/${sessionId}/visual-cues`, {
+    method: 'POST',
+    body: JSON.stringify({ frame }),
+  });
+}
+
+export async function getReadingVisualCueSummary(id, sessionId) {
+  return request(`/api/books/${id}/reading-sessions/${sessionId}/visual-cues`);
+}
+
 export async function heartbeatReadingSession(id, elapsedSeconds, options = {}) {
   return request(`/api/books/${id}/reading-sessions/heartbeat`, {
     method: 'POST',
